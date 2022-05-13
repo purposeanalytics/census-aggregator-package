@@ -4,16 +4,16 @@
 \alias{get_census_variables_and_children}
 \title{Get census variables and children}
 \usage{
-get_census_variables_and_children(dataset = "CA16", regions, level, variables)
+get_census_variables_and_children(dataset = "CA16", variables)
 }
 \arguments{
 \item{dataset}{The dataset to query variables from. Defaults to "CA16", the 2016 Canadian Census.}
 
+\item{variables}{An R vector containing the variable short codes for the Census variables to download. Variable short codes can be found via \link[cancensus]{list_census_vectors}.}
+
 \item{regions}{A named list of census regions to retrieve, e.g. ... TODO - do we want to offer all the same options as cancensus? Probably yes!}
 
 \item{level}{The census aggregation level to retrieve, defaults to ... TODO - do we want to offer all the same options as cancensus? Probably yes!}
-
-\item{variables}{An R vector containing the variable short codes for the Census variables to download. Variable short codes can be found via \link[cancensus]{list_census_vectors}.}
 }
 \value{
 

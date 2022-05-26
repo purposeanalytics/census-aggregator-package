@@ -11,8 +11,7 @@
 #' @export
 #'
 #' @examples {
-#' get_census_variables_and_children(variables = "v_CA16_404")
-#'
+#'   get_census_variables_and_children(variables = c("v_CA16_404", "v_CA16_548"))
 #' }
 get_census_variables_and_children <- function(dataset = "CA16",
                                               # regions, level,
@@ -24,16 +23,19 @@ get_census_variables_and_children <- function(dataset = "CA16",
   # Get all child variables for each vector
   children_vectors <- variables %>%
     purrr::set_names() %>%
-    purrr::map(cancensus::child_census_vectors, keep_parent = TRUE)
-
-  # Get data for each vector - just do for Canada for now, don't actually set region / level
-  census_vectors <- children_vectors %>%
-    purrr::map_dfr(~ get_and_tidy_census_data(dataset = dataset, vectors = .x[["vector"]]),
+    purrr::map_dfr(cancensus::child_census_vectors,
+      keep_parent = TRUE,
       .id = "highest_parent_vector"
     )
 
+  # Get data for each vector - just do for Canada for now, don't actually set region / level
+  census_vectors <- get_and_tidy_census_data(
+    dataset = dataset,
+    vectors = children_vectors[["vector"]]
+  )
+
   # Add label and units
-  dplyr::bind_rows(children_vectors) %>%
+  children_vectors %>%
     dplyr::left_join(census_vectors, by = "vector")
 }
 

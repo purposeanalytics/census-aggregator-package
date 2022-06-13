@@ -1,0 +1,197 @@
+---
+output: github_document
+---
+
+# Exploring units and aggregation of vectors
+
+```{r, message = FALSE}
+library(censusaggregate)
+library(dplyr)
+library(stringr)
+library(purrr)
+library(cancensus)
+library(tidyr)
+```
+
+### Look at units and aggregation of vectors, to figure out automagic aggregation
+
+```{r}
+vectors <- vectors %>%
+  mutate(aggregation_type = str_remove(aggregation, " of.*"))
+
+vectors %>%
+  count(units, aggregation_type)
+```
+
+#### What is the one "Number" / "Average"?
+
+```{r}
+vectors %>%
+  filter(
+    units == "Number",
+    aggregation_type == "Average"
+  ) %>%
+  glimpse()
+```
+
+This one might be hard to do automatically - it probably actually needs to be derived based off of the 2016 and 2011 populations - but I can try!
+
+TODO
+
+#### Are the currency average / median ones all the same vectors (just different aggregations?)
+
+```{r}
+currency_vectors <- vectors %>%
+  filter(units == "Currency")
+
+currency_vectors <- currency_vectors %>%
+  mutate(label_minus_aggregation = str_remove(label, aggregation_type)) %>%
+  split(.$aggregation_type)
+
+currency_vectors <- currency_vectors %>%
+  map(function(x) {
+    x %>%
+      pull(label_minus_aggregation) %>%
+      sort()
+  })
+
+identical(currency_vectors[["Average"]], currency_vectors[["Median"]])
+```
+
+Yup!
+
+#### What does ratio mean?
+
+```{r}
+vectors %>%
+  filter(units == "Ratio") %>%
+  select(label)
+```
+
+Already all averages
+
+#### Percentage?
+
+```{r}
+vectors %>%
+  filter(units == "Percentage (0-100)") %>%
+  select(label)
+```
+
+### Grab data and test aggregating each case
+
+```{r}
+cts <- c("5350094.00", "5350093.00")
+
+vectors_to_grab <- vectors %>%
+  filter(!(units == "Number" & aggregation_type == "Additive") & is.na(parent_vector)) %>%
+  pull(vector)
+
+set.seed(1234)
+
+# For additive, get a few
+
+sample_vectors_to_grab <- vectors %>%
+  filter(units == "Number" & aggregation_type == "Additive" & is.na(parent_vector)) %>%
+  sample_n(5) %>%
+  pull(vector)
+
+vectors_to_grab <- c(vectors_to_grab, sample_vectors_to_grab)
+
+data <- get_census_variables_and_children(regions = list(CT = cts), level = "CT", variables = vectors_to_grab)
+```
+
+#### units == "Number", aggregation_type == "Additive"
+
+Get total count (sum of value) for each, then divide by total
+
+Total is from HIGHEST parent vector, NOT from Population field
+e.g. vector v_CA16_3405 is a total
+5350093.00 has population 5652 but value 5405 for the total
+5350094.00 has population 4950 but value 4825 for the total
+
+If we use the Population, then any children vectors summed will not add up to 100%
+
+```{r}
+number_additive_sum <- data %>%
+  filter(units == "Number", aggregation_type == "Additive") %>%
+  select(vector, label, highest_parent_vector, geo_uid, value) %>%
+  arrange(vector, geo_uid) %>%
+  group_by(vector, label, highest_parent_vector) %>%
+  summarise(
+    value = sum(value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+number_additive_sum_parents_only <- number_additive_sum %>%
+  filter(vector == highest_parent_vector) %>%
+  select(highest_parent_vector, parent_value = value)
+
+number_additive_sum %>%
+  left_join(number_additive_sum_parents_only, by = "highest_parent_vector") %>%
+  mutate(value_proportion = value / parent_value) %>%
+  select(-parent_value)
+```
+
+#### units == "Number", aggregation_type == "Average"
+
+TODO
+
+```{r}
+# data %>%
+#   filter(units == "Number", aggregation_type == "Average") %>%
+#   select(vector, label, parent_vector, GeoUID, Population, value) %>%
+#   arrange(vector, GeoUID)
+```
+
+#### units == "Currency", aggregation_type == "Average"
+
+Get "total value" (value * population) for each, then sum within vector and divide by total Population
+
+Using Population because that's what's used to weight the averages to make a "total"
+
+```{r}
+data %>%
+  filter(units == "Currency", aggregation_type == "Average") %>%
+  select(vector, label, GeoUID, Population, value) %>%
+  arrange(vector, GeoUID) %>%
+  mutate(value_total = value * Population) %>%
+  group_by(vector, label) %>%
+  summarise(
+    value = sum(value_total) / sum(Population),
+    .groups = "drop"
+  )
+```
+
+#### units == "Currency", aggregation_type == "Average"
+
+TODO
+
+#### units == "Ratio", aggregation_type == "Average"
+
+TODO
+
+```{r}
+# data %>%
+#   filter(units == "Ratio", aggregation_type == "Average") %>%
+#   select(vector, label, GeoUID, Population, value) %>%
+#   arrange(vector, GeoUID)
+```
+
+#### units == "Percentage (0-100)", aggregation_type == "Average"
+
+Multiply Population by value (/100), then sum and divide by total population in vector (probably more accurately, total population of parent vector?)
+
+```{r}
+data %>%
+  filter(units == "Percentage (0-100)", aggregation_type == "Average") %>%
+  select(vector, label, GeoUID, Population, value) %>%
+  arrange(vector, GeoUID) %>%
+  mutate(value_proportion = value / 100) %>%
+  group_by(vector, label) %>%
+  summarise(
+    value = sum(Population * value_proportion) / sum(Population) * 100,
+    value = round(value, 1),
+    .groups = "drop"
+  )
+```

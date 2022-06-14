@@ -105,12 +105,12 @@ data <- get_census_variables_and_children(regions = list(CT = cts), level = "CT"
 
 Get total count (sum of value) for each, then divide by total
 
-Total is from HIGHEST parent vector, NOT from Population field
+Total is from HIGHEST parent vector, NOT from population field
 e.g. vector v_CA16_3405 is a total
 5350093.00 has population 5652 but value 5405 for the total
 5350094.00 has population 4950 but value 4825 for the total
 
-If we use the Population, then any children vectors summed will not add up to 100%
+If we use the population, then any children vectors summed will not add up to 100%
 
 ```{r}
 number_additive_sum <- data %>%
@@ -140,25 +140,25 @@ TODO
 ```{r}
 # data %>%
 #   filter(units == "Number", aggregation_type == "Average") %>%
-#   select(vector, label, parent_vector, GeoUID, Population, value) %>%
-#   arrange(vector, GeoUID)
+#   select(vector, label, parent_vector, geo_uid, population, value) %>%
+#   arrange(vector, geo_uid)
 ```
 
 #### units == "Currency", aggregation_type == "Average"
 
-Get "total value" (value * population) for each, then sum within vector and divide by total Population
+Get "total value" (value * population) for each, then sum within vector and divide by total population
 
-Using Population because that's what's used to weight the averages to make a "total"
+Using population because that's what's used to weight the averages to make a "total"
 
 ```{r}
 data %>%
   filter(units == "Currency", aggregation_type == "Average") %>%
-  select(vector, label, GeoUID, Population, value) %>%
-  arrange(vector, GeoUID) %>%
-  mutate(value_total = value * Population) %>%
+  select(vector, label, geo_uid, population, value) %>%
+  arrange(vector, geo_uid) %>%
+  mutate(value_total = value * population) %>%
   group_by(vector, label) %>%
   summarise(
-    value = sum(value_total) / sum(Population),
+    value = sum(value_total) / sum(population),
     .groups = "drop"
   )
 ```
@@ -174,23 +174,23 @@ TODO
 ```{r}
 # data %>%
 #   filter(units == "Ratio", aggregation_type == "Average") %>%
-#   select(vector, label, GeoUID, Population, value) %>%
-#   arrange(vector, GeoUID)
+#   select(vector, label, geo_uid, population, value) %>%
+#   arrange(vector, geo_uid)
 ```
 
 #### units == "Percentage (0-100)", aggregation_type == "Average"
 
-Multiply Population by value (/100), then sum and divide by total population in vector (probably more accurately, total population of parent vector?)
+Multiply population by value (/100), then sum and divide by total population in vector (probably more accurately, total population of parent vector?)
 
 ```{r}
 data %>%
   filter(units == "Percentage (0-100)", aggregation_type == "Average") %>%
-  select(vector, label, GeoUID, Population, value) %>%
-  arrange(vector, GeoUID) %>%
+  select(vector, label, geo_uid, population, value) %>%
+  arrange(vector, geo_uid) %>%
   mutate(value_proportion = value / 100) %>%
   group_by(vector, label) %>%
   summarise(
-    value = sum(Population * value_proportion) / sum(Population) * 100,
+    value = sum(population * value_proportion) / sum(population) * 100,
     value = round(value, 1),
     .groups = "drop"
   )

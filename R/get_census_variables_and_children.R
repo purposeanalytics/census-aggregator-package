@@ -25,8 +25,7 @@ get_census_variables_and_children <- function(dataset = "CA16",
     purrr::map_dfr(cancensus::child_census_vectors,
       keep_parent = TRUE,
       .id = "highest_parent_vector"
-    ) %>%
-    dplyr::distinct()
+    )
 
   # Get data for each vector
   census_vectors <- get_and_tidy_census_data(
@@ -34,8 +33,7 @@ get_census_variables_and_children <- function(dataset = "CA16",
     regions = regions,
     level = level,
     vectors = unique(children_vectors[["vector"]])
-  ) %>%
-    dplyr::distinct()
+  )
 
   # Add label and units, derive "aggregation_type"
   children_vectors %>%
@@ -56,7 +54,6 @@ get_and_tidy_census_data <- function(dataset,
     vectors = vectors,
     labels = "short"
   ) %>%
-    dplyr::select(geo_uid = GeoUID, dplyr::all_of(vectors)) %>%
-    tidyr::pivot_longer(dplyr::all_of(vectors), names_to = "vector") %>%
-    dplyr::distinct()
+    dplyr::select(geo_uid = GeoUID, population = Population, dplyr::all_of(vectors)) %>%
+    tidyr::pivot_longer(dplyr::all_of(vectors), names_to = "vector")
 }

@@ -6,13 +6,33 @@ aggregate_census_variables <- function(data) {
   # Make combined field for units and aggregation and split on it
   data <- data %>%
     dplyr::mutate(
-      units_aggregation = paste0(.data$units, "_", .data$aggregation_simplified) %>%
-        split(.$units_aggregation)
-    )
+      units_aggregation = paste0(.data$units, "_", .data$aggregation_type)
+    ) %>%
+    split(.$units_aggregation)
 
   # Iterate through and aggregate
 
-  purrr::imap_dfr
+  purrr::imap_dfr(data, function(data, units_aggregation) {
+    if (units_aggregation %in% names(units_and_aggregation_functions)) {
+      # Aggregate if it is in the list of supported aggregations / functions
+      func <- units_and_aggregation_functions[[units_aggregation]][["func"]]
+
+      do.call(func, list(data = data))
+    } else {
+      # Do not aggregate, and just warn if not
+      units_aggregation_split <- stringr::str_split(units_aggregation, "_", simplify = TRUE)
+      warning(
+        "Aggregation for vectors with ",
+        "`units: ", units_aggregation_split[[1]], "` ",
+        "and ",
+        "`aggregation_type: ", units_aggregation_split[[2]], "` ",
+        "is not available. Vectors with this combination have been dropped.",
+        call. = FALSE
+      )
+
+      tibble::tibble()
+    }
+  })
 }
 
 
@@ -37,21 +57,29 @@ contains_column <- function(column, data) {
 units_and_aggregation_functions <- tibble::tribble(
   ~units, ~aggregation, ~func, ~units_aggregation,
   "Number", "Additive", "aggregate_number_additive", "Number_Additive",
-  "Number", "Average", "aggregate_number_average", "Number_Average",
-  "Ratio", "Average", "aggregate_ratio_average", "Ratio_Average",
+  # "Number", "Average", "aggregate_number_average", "Number_Average",
+  # "Ratio", "Average", "aggregate_ratio_average", "Ratio_Average",
   "Percentage (0-100)", "Average", "aggregate_percentage_average", "Percentage (0-100)_Average",
-  "Currency", "Median", "aggregate_currency_median", "Currency_Median",
+  # "Currency", "Median", "aggregate_currency_median", "Currency_Median",
   "Currency", "Average", "aggregate_currency_average", "Currency_Average"
 ) %>%
   split(.$units_aggregation)
 
 aggregate_number_additive <- function(data) {
+
+  # Total value is derived by summing value
+
   aggregate_summary <- data %>%
-    dplyr::group_by(highest_parent_vector, vector, type, label, units, parent_vector, aggregation, aggregation_type, details) %>%
+    dplyr::group_by(
+      .data$highest_parent_vector, .data$vector, .data$type, .data$label, .data$units,
+      .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
+    ) %>%
     dplyr::summarise(
       value = sum(.data$value, na.rm = TRUE),
       .groups = "drop"
     )
+
+  # Proportion is from the parent vector's total, not the sum of the population (since it does not always match)
 
   aggregate_summary_parents_only <- aggregate_summary %>%
     dplyr::filter(.data$vector == .data$highest_parent_vector) %>%
@@ -61,4 +89,48 @@ aggregate_number_additive <- function(data) {
     dplyr::left_join(aggregate_summary_parents_only, by = "highest_parent_vector") %>%
     dplyr::mutate(value_proportion = .data$value / .data$parent_value) %>%
     dplyr::select(-.data$parent_value)
+}
+
+aggregate_number_average <- function() {
+
+}
+
+aggregate_ratio_average <- function() {
+
+}
+
+aggregate_percentage_average <- function(data) {
+
+  # Multiply population by value (/100), then sum and divide by total population in vector
+
+  data %>%
+    dplyr::mutate(value_proportion = .data$value / 100) %>%
+    dplyr::group_by(
+      .data$highest_parent_vector, .data$vector, .data$type, .data$label, .data$units,
+      .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
+    ) %>%
+    dplyr::summarise(
+      value = sum(.data$population * .data$value_proportion) / sum(.data$population),
+      .groups = "drop"
+    )
+}
+
+aggregate_currency_median <- function() {
+
+}
+
+aggregate_currency_average <- function(data) {
+
+  # Get "total value" (value * population) for each, then sum within vector and divide by total Population
+
+  data %>%
+    dplyr::mutate(value_total = value * population) %>%
+    dplyr::group_by(
+      .data$highest_parent_vector, .data$vector, .data$type, .data$label, .data$units,
+      .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
+    ) %>%
+    dplyr::summarise(
+      value = sum(.data$value_total) / sum(.data$population),
+      .groups = "drop"
+    )
 }

@@ -11,7 +11,6 @@
 #'
 #' @examples
 #' get_census_variables_and_children(regions = list(CSD = c("3520005", "3521005", "3521010")), level = "CSD", variables = c("v_CA16_404", "v_CA16_548"))
-#'
 get_census_variables_and_children <- function(dataset = "CA16",
                                               regions = "Regions",
                                               level,
@@ -26,19 +25,24 @@ get_census_variables_and_children <- function(dataset = "CA16",
     purrr::map_dfr(cancensus::child_census_vectors,
       keep_parent = TRUE,
       .id = "highest_parent_vector"
-    )
+    ) %>%
+    dplyr::distinct()
 
-  # Get data for each vector - just do for Canada for now, don't actually set region / level
+  # Get data for each vector
   census_vectors <- get_and_tidy_census_data(
     dataset = dataset,
     regions = regions,
     level = level,
-    vectors = children_vectors[["vector"]]
-  )
+    vectors = unique(children_vectors[["vector"]])
+  ) %>%
+    dplyr::distinct()
 
-  # Add label and units
+  # Add label and units, derive "aggregation_type"
   children_vectors %>%
-    dplyr::left_join(census_vectors, by = "vector")
+    dplyr::left_join(census_vectors, by = "vector") %>%
+    dplyr::distinct() %>%
+    dplyr::mutate(aggregation_type = stringr::str_remove(.data$aggregation, " of.*")) %>%
+    dplyr::relocate(aggregation_type, .after = aggregation)
 }
 
 get_and_tidy_census_data <- function(dataset,
@@ -53,5 +57,6 @@ get_and_tidy_census_data <- function(dataset,
     labels = "short"
   ) %>%
     dplyr::select(geo_uid = GeoUID, dplyr::all_of(vectors)) %>%
-    tidyr::pivot_longer(dplyr::all_of(vectors), names_to = "vector")
+    tidyr::pivot_longer(dplyr::all_of(vectors), names_to = "vector") %>%
+    dplyr::distinct()
 }

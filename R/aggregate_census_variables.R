@@ -7,8 +7,9 @@ aggregate_census_variables <- function(data) {
   data <- data %>%
     dplyr::mutate(
       units_aggregation = paste0(.data$units, "_", .data$aggregation_type)
-    ) %>%
-    split(.$units_aggregation)
+    )
+
+  data <- split(data, data$units_aggregation)
 
   # Iterate through and aggregate
 
@@ -124,7 +125,7 @@ aggregate_currency_average <- function(data) {
   # Get "total value" (value * population) for each, then sum within vector and divide by total Population
 
   data %>%
-    dplyr::mutate(value_total = value * population) %>%
+    dplyr::mutate(value_total = .data$value * .data$population) %>%
     dplyr::group_by(
       .data$highest_parent_vector, .data$vector, .data$type, .data$label, .data$units,
       .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details

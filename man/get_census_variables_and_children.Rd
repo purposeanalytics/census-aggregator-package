@@ -4,7 +4,12 @@
 \alias{get_census_variables_and_children}
 \title{Get census variables and children}
 \usage{
-get_census_variables_and_children(dataset = "CA16", regions, level, variables)
+get_census_variables_and_children(
+  dataset = "CA16",
+  regions = "Regions",
+  level,
+  variables
+)
 }
 \arguments{
 \item{dataset}{The dataset to query variables from. Defaults to "CA16", the 2016 Canadian Census.}
@@ -15,14 +20,12 @@ get_census_variables_and_children(dataset = "CA16", regions, level, variables)
 
 \item{variables}{An R vector containing the variable short codes for the Census variables to download. Variable short codes can be found via \link[cancensus]{list_census_vectors}.}
 }
-\value{
-
-}
 \description{
 Get data for census variables and all of their children (and their childrens' children, etc).
 }
 \examples{
-{
-  get_census_variables_and_children(variables = c("v_CA16_404", "v_CA16_548"))
-}
+get_census_variables_and_children(
+ regions = list(CSD = c("3520005", "3521005", "3521010")),
+ level = "CSD", variables = c("v_CA16_404", "v_CA16_548")
+)
 }

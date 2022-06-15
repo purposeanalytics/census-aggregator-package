@@ -3,3 +3,4 @@
 export("%>%")
 export(get_census_variables_and_children)
 importFrom(magrittr,"%>%")
+importFrom(rlang,.data)

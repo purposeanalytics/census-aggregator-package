@@ -1,3 +1,23 @@
+#' Aggregate census variables
+#'
+#' Automatically aggregate census variables from multiple geographies, based on the type of data. See Details.
+#'
+#' The following types of vectors are supported:
+#'
+#' ## Units: Number, Aggregation Type: Additive
+#'
+#' The \code{value} is derived by summing all of the \code{value}s for each vector, across geographies. The result is a count (e.g. population, households). An additional field, \code{value_proportion}, is derived, describing what proportion of the total count (e.g. of population, households) from the highest parent vector falls within each child vector.
+#'
+#' ## Units: Percentage (0-100), Aggregation Type: Average
+#'
+#' ## Units: Currency, Aggregation Type: Average
+#'
+#' @param data Data for census variables, from \code{\link{get_census_variables_and_children}}
+#'
+#' @return
+#' @export
+#'
+#' @examples
 aggregate_census_variables <- function(data) {
 
   # Check for necessary columns - units, aggregation_type, geo_uid, vector, value, highest_parent_vector
@@ -20,7 +40,7 @@ aggregate_census_variables <- function(data) {
 
       do.call(func, list(data = data))
     } else {
-      # Do not aggregate, and just warn if not
+      # If not, do not aggregate and just warn / drop data
       units_aggregation_split <- stringr::str_split(units_aggregation, "_", simplify = TRUE)
       warning(
         "Aggregation for vectors with ",

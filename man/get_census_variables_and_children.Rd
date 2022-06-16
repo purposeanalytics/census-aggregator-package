@@ -8,7 +8,8 @@ get_census_variables_and_children(
   dataset = "CA16",
   regions = "Regions",
   level,
-  variables
+  variables,
+  quiet = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ get_census_variables_and_children(
 \item{level}{The census aggregation level to retrieve, defaults to \code{"Regions"}. One of \code{"Regions"}, \code{"PR"}, \code{"CMA"}, \code{"CD"}, \code{"CSD"}, \code{"CT"}, \code{"DA"}, \code{"EA"} (for 1996), or \code{"DB"} (for 2001-2016).}
 
 \item{variables}{An R vector containing the variable short codes for the Census variables to download. Variable short codes can be found via \link[cancensus]{list_census_vectors}.}
+
+\item{quiet}{When TRUE, suppress messages and warnings.}
 }
 \description{
 Get data for census variables and all of their children (and their childrens' children, etc).

@@ -10,13 +10,14 @@
 #'
 #' @examples
 #' get_census_variables_and_children(
-#'  regions = list(CSD = c("3520005", "3521005", "3521010")),
-#'  level = "CSD", variables = c("v_CA16_404", "v_CA16_548")
+#'   regions = list(CSD = c("3520005", "3521005", "3521010")),
+#'   level = "CSD", variables = c("v_CA16_404", "v_CA16_548")
 #' )
 get_census_variables_and_children <- function(dataset = "CA16",
                                               regions = "Regions",
                                               level,
-                                              variables) {
+                                              variables,
+                                              quiet = TRUE) {
 
   # Check access to internet
   check_internet()
@@ -49,13 +50,19 @@ get_and_tidy_census_data <- function(dataset,
                                      regions,
                                      level,
                                      vectors,
-                                     labels = "short") {
+                                     labels = "short",
+                                     quiet = TRUE) {
   cancensus::get_census(dataset,
     regions = regions,
     level = level,
     vectors = vectors,
-    labels = "short"
+    labels = "short",
+    quiet = quiet
   ) %>%
-    dplyr::select(geo_uid = .data$GeoUID, population = .data$Population, dplyr::all_of(vectors)) %>%
+    dplyr::select(
+      geo_uid = .data$GeoUID,
+      population = .data$Population, households = .data$Households,
+      dplyr::all_of(vectors)
+    ) %>%
     tidyr::pivot_longer(dplyr::all_of(vectors), names_to = "vector")
 }

@@ -1,0 +1,222 @@
+---
+output: html_document
+---
+
+```{r, echo = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(dplyr, warn.conflicts = FALSE)
+library(censusaggregate)
+library(purrr)
+```
+
+```{r data}
+regions <- list(CSD = c("3520005", "3521005", "3521010"))
+level <- "CSD"
+
+variables <-
+  tibble::tribble(
+    ~vector, ~vector_label, ~vector_label_short,
+    "v_CA16_401", "Population, 2016", "population_2016",
+    "v_CA16_402", "Population, 2011", "population_2011",
+    "v_CA16_403", "Population percentage change, 2011 to 2016", "population_change",
+    "v_CA16_406", "Population density per square kilometre", "population_density",
+    "v_CA16_1", "Total - Age", "age",
+    "v_CA16_418", "Private households by household size", "household_size",
+    "v_CA16_484", "Total number of census families in private households - 100% data", "family_type",
+    "v_CA16_504", "Total - Private households by household type - 100% data", "household_type",
+    "v_CA16_512", "Total - Knowledge of official languages for the total population excluding institutional residents - 100% data", "knowledge_of_english",
+    "v_CA16_1355", "Total - Language spoken most often at home for the total population excluding institutional residents - 100% data", "top_10_languages",
+    "v_CA16_2525", "In low income based on the Low-income measure, after tax (LIM-AT)", "lim_at",
+    "v_CA16_3405", "Total - Immigrant status and period of immigration for the population in private households - 25% sample data", "immigrant_status",
+    "v_CA16_3852", "Total - Aboriginal identity for the population in private households - 25% sample data", "aboriginal_identity",
+    "v_CA16_3954", "Total - Visible minority for the population in private households - 25% sample data", "visible_minority",
+    "v_CA16_3999", "Total - Ethnic origin for the population in private households - 25% sample data", "ethnic_origin",
+    "v_CA16_4836", "Total - Private households by tenure - 25% sample data", "household_tenure",
+    "v_CA16_4886", "Total -  Owner and tenant households with household total income greater than zero, in non-farm, non-reserve private dwellings by shelter-cost-to-income ratio - 25% sample data", "household_rent?",
+    "v_CA16_5051", "Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data", "educational_attainment"
+  )
+
+# Get data for variables and children ----
+
+data <- get_census_variables_and_children(
+  regions = regions,
+  level = level,
+  variables = variables[["vector"]]
+)
+```
+
+```{r data_export}
+# Prep data for export
+# Choose which vectors to keep within each
+
+breakdown_vectors <- list(
+  "v_CA16_401" = NA,
+  "v_CA16_418" = c("v_CA16_419", "v_CA16_420", "v_CA16_421", "v_CA16_422", "v_CA16_423"),
+  "v_CA16_3954" = c(
+    "v_CA16_3957", "v_CA16_3960", "v_CA16_3963", "v_CA16_3966",
+    "v_CA16_3969", "v_CA16_3972", "v_CA16_3975", "v_CA16_3978", "v_CA16_3981",
+    "v_CA16_3984", "v_CA16_3987", "v_CA16_3990", "v_CA16_3993",
+    "v_CA16_3996"
+  ),
+  "v_CA16_4836" = c("v_CA16_4837", "v_CA16_4838", "v_CA16_4839"),
+  "v_CA16_1" = c(
+    "v_CA16_7", "v_CA16_25", "v_CA16_43", "v_CA16_64", "v_CA16_82",
+    "v_CA16_100", "v_CA16_118", "v_CA16_136", "v_CA16_154", "v_CA16_172",
+    "v_CA16_190", "v_CA16_208", "v_CA16_226", "v_CA16_247", "v_CA16_265",
+    "v_CA16_283", "v_CA16_301", "v_CA16_322", "v_CA16_340", "v_CA16_358", "v_CA16_376"
+  ),
+  "v_CA16_512" = c("v_CA16_515", "v_CA16_521"),
+  "v_CA16_3405" = c("v_CA16_3411", "v_CA16_3432"),
+  "v_CA16_3852" = c("v_CA16_3855"),
+  "v_CA16_5051" = c("v_CA16_5054", "v_CA16_5057", "v_CA16_5060"),
+  "v_CA16_484" = c("v_CA16_485", "v_CA16_488", "v_CA16_489"),
+  "v_CA16_504" = c("v_CA16_505", "v_CA16_508", "v_CA16_509")
+)
+
+filter_breakdown_vectors <- function(data, vector) {
+  
+  vector_breakdown_vectors <- breakdown_vectors[[vector]]
+  
+  if (!all(is.na(vector_breakdown_vectors))) {
+    data <- data %>%
+      filter(
+        vector %in% c(vector_breakdown_vectors, !!vector)
+      )
+  } else {
+    data <- data %>%
+      filter(
+        vector == !!vector
+      )
+  }
+
+  data
+}
+
+data_breakdown <- map_dfr(
+  variables[["vector"]],
+  function(vector) {
+    data %>%
+      filter_breakdown_vectors(vector) %>%
+      aggregate_census_variables()
+  }
+) %>%
+  select(highest_parent_vector, label, value, value_proportion) %>%
+  distinct() %>%
+  left_join(variables, by = c("highest_parent_vector" = "vector")) %>%
+  select(highest_parent_vector, vector_label_short, label, value, value_proportion)
+```
+
+
+# Population
+
+```{r population}
+data_breakdown %>%
+  filter(vector_label_short == "population_2016") %>%
+  select(label, value, value_proportion)
+```
+
+# Number of households
+
+```{r}
+data %>%
+  select(geo_uid, households) %>%
+  distinct() %>%
+  summarise(across(households, sum, na.rm = TRUE))
+```
+
+# Population change (2011 to 2016)
+
+# Population density
+
+# Private households by household size
+
+```{r household_size}
+data_breakdown %>%
+  filter(vector_label_short == "household_size") %>%
+  select(label, value, value_proportion)
+```
+
+# Estimated median household income
+
+# Unaffordable housing
+
+# Low-income measure after tax (LIM-AT)
+
+# Visible minority population
+
+```{r visible_minority}
+data_breakdown %>%
+  filter(vector_label_short == "visible_minority") %>%
+  select(label, value, value_proportion)
+```
+
+# Household tenure
+
+```{r household_tenure}
+data_breakdown %>%
+  filter(vector_label_short == "household_tenure") %>%
+  select(label, value, value_proportion)
+```
+
+# Average shelter cost
+
+# Age 
+
+```{r age}
+data_breakdown %>%
+  filter(vector_label_short == "age") %>%
+  select(label, value, value_proportion)
+```
+
+# Language spoken at home
+
+# Knowledge of English
+
+```{r knowledge_of_english}
+data_breakdown %>%
+  filter(vector_label_short == "knowledge_of_english") %>%
+  select(label, value, value_proportion)
+```
+
+# Immigrant status
+
+```{r immigrant_status}
+data_breakdown %>%
+  filter(vector_label_short == "immigrant_status") %>%
+  select(label, value, value_proportion)
+```
+
+# Aboriginal identity
+
+```{r aboriginal_identity}
+data_breakdown %>%
+  filter(vector_label_short == "aboriginal_identity") %>%
+  select(label, value, value_proportion)
+```
+
+# Country of origin
+
+# Educational attainment
+
+```{r educational_attainment}
+data_breakdown %>%
+  filter(vector_label_short == "educational_attainment") %>%
+  select(label, value, value_proportion)
+```
+
+# Family type
+
+```{r family_type}
+data_breakdown %>%
+  filter(vector_label_short == "family_type") %>%
+  select(label, value, value_proportion)
+```
+
+# Multiple family households
+
+```{r household_type}
+data_breakdown %>%
+  filter(vector_label_short == "household_type") %>%
+  select(label, value, value_proportion)
+```

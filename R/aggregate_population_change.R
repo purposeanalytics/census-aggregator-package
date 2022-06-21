@@ -1,3 +1,18 @@
+#' Aggregate population change
+#'
+#' Average population density across multiple geographies.
+#'
+#' @param data Data for census variables, from \code{\link{get_census_variables_and_children}}. Must contain exactly two vectors with label containing "Population", e.g. "Population, 2016" and "Population, 2011" to get the population change from 2011 to 2016.
+#'
+#' @export
+#'
+#' @examples
+#' get_census_variables_and_children(
+#'   regions = list(CSD = c("3520005", "3521005")),
+#'   level = "CSD",
+#'   variables = c("v_CA16_401", "v_CA16_402")
+#' ) %>%
+#'   aggregate_population_change()
 aggregate_population_change <- function(data) {
 
   # Filter for population data only, get year from each
@@ -10,10 +25,7 @@ aggregate_population_change <- function(data) {
 
   # Check that data contains 2 population vectors
   n_population_vectors <- population_data %>%
-    dplyr::filter(stringr::str_detect(label, "Population, ")) %>%
-    dplyr::pull(label) %>%
-    unique() %>%
-    length()
+    calculate_n_vectors("Population, ")
 
   if (n_population_vectors != 2) {
     stop("Data must contain two distinct years of `Population` vectors to calculate population change.",
@@ -36,8 +48,16 @@ aggregate_population_change <- function(data) {
     dplyr::mutate(
       value = (.data$value_max - .data$value_min) / .data$value_min,
       label = glue::glue("Population percentage change, {population_year_min} to {population_year_max}"),
-      details = glue::glue("CA {population_year_max} Census; Population and Dwellings; Population percentage change,  {population_year_min} to {population_year_max}"),
+      details = glue::glue("CA {population_year_max} Census; Population and Dwellings; Population percentage change, {population_year_min} to {population_year_max}"),
       dplyr::across(c(.data$label, .data$details), as.character)
     ) %>%
     dplyr::select(.data$type, .data$label, .data$units, .data$aggregation, .data$aggregation_type, .data$details, .data$value)
+}
+
+calculate_n_vectors <- function(data, label) {
+  data %>%
+    dplyr::filter(stringr::str_detect(label, !!label)) %>%
+    dplyr::pull(.data$label) %>%
+    unique() %>%
+    length()
 }

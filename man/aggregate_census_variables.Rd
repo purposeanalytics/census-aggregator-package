@@ -25,3 +25,11 @@ The \code{value} is derived by summing all of the \code{value}s for each vector,
 \subsection{Units: Currency, Aggregation Type: Average}{
 }
 }
+\examples{
+get_census_variables_and_children(
+  regions = list(CSD = c("3520005", "3521005")),
+  level = "CSD",
+  variables = c("v_CA16_401", "v_CA16_418")
+) \%>\%
+  aggregate_census_variables()
+}

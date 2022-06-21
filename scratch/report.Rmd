@@ -32,7 +32,7 @@ variables <-
     "v_CA16_3954", "Total - Visible minority for the population in private households - 25% sample data", "visible_minority",
     "v_CA16_3999", "Total - Ethnic origin for the population in private households - 25% sample data", "ethnic_origin",
     "v_CA16_4836", "Total - Private households by tenure - 25% sample data", "household_tenure",
-    "v_CA16_4886", "Total -  Owner and tenant households with household total income greater than zero, in non-farm, non-reserve private dwellings by shelter-cost-to-income ratio - 25% sample data", "household_rent?",
+    "v_CA16_4886", "Total -  Owner and tenant households with household total income greater than zero, in non-farm, non-reserve private dwellings by shelter-cost-to-income ratio - 25% sample data", "unaffordable_housing",
     "v_CA16_5051", "Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data", "educational_attainment"
   )
 
@@ -41,7 +41,8 @@ variables <-
 data <- get_census_variables_and_children(
   regions = regions,
   level = level,
-  variables = variables[["vector"]]
+  variables = variables[["vector"]], 
+  quiet = FALSE
 )
 ```
 
@@ -50,7 +51,7 @@ data <- get_census_variables_and_children(
 # Choose which vectors to keep within each
 
 breakdown_vectors <- list(
-  "v_CA16_401" = NA,
+  "v_CA16_401" = NA, 
   "v_CA16_418" = c("v_CA16_419", "v_CA16_420", "v_CA16_421", "v_CA16_422", "v_CA16_423"),
   "v_CA16_3954" = c(
     "v_CA16_3957", "v_CA16_3960", "v_CA16_3963", "v_CA16_3966",
@@ -59,6 +60,7 @@ breakdown_vectors <- list(
     "v_CA16_3996"
   ),
   "v_CA16_4836" = c("v_CA16_4837", "v_CA16_4838", "v_CA16_4839"),
+  "v_CA16_4886" = "v_CA16_4888",
   "v_CA16_1" = c(
     "v_CA16_7", "v_CA16_25", "v_CA16_43", "v_CA16_64", "v_CA16_82",
     "v_CA16_100", "v_CA16_118", "v_CA16_136", "v_CA16_154", "v_CA16_172",
@@ -156,7 +158,18 @@ data_breakdown %>%
 
 # Unaffordable housing
 
+```{r unaffordable_housing}
+data_breakdown %>%
+  filter(vector_label_short == "unaffordable_housing")
+```
+
 # Low-income measure after tax (LIM-AT)
+```{r lim_at}
+# TODO - needs to be divided by population
+
+data_breakdown %>%
+  filter(vector_label_short == "lim_at")
+```
 
 # Visible minority population
 

@@ -2,6 +2,8 @@
 
 export("%>%")
 export(aggregate_census_variables)
+export(aggregate_population_change)
+export(aggregate_population_density)
 export(get_census_variables_and_children)
 importFrom(magrittr,"%>%")
 importFrom(rlang,.data)

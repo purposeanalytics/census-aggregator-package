@@ -1,3 +1,18 @@
+#' Aggregate population density
+#'
+#' Average population density across multiple geographies.
+#'
+#' @param data Data for census variables, from \code{\link{get_census_variables_and_children}}. Must contain a vector with label "Land area in square kilometres" and one vector containing "Population" in the label.
+#'
+#' @export
+#'
+#' @examples
+#' get_census_variables_and_children(
+#'   regions = list(CSD = c("3520005", "3521005")),
+#'   level = "CSD",
+#'   variables = c("v_CA16_401", "v_CA16_407")
+#' ) %>%
+#'   aggregate_population_density()
 aggregate_population_density <- function(data) {
   # Filter for population and area
   population_and_area_data <- data %>%
@@ -5,24 +20,18 @@ aggregate_population_density <- function(data) {
       .data$label == "Land area in square kilometres")
 
   # Check it contains the right fields - only ONE population field allowed
-  n_population_fields <- population_and_area_data %>%
-    dplyr::filter(stringr::str_detect(.data$label, "Population, ")) %>%
-    dplyr::pull(label) %>%
-    unique() %>%
-    length()
+  n_population_vectors <- population_and_area_data %>%
+    calculate_n_vectors("Population, ")
 
-  if (n_population_fields > 1) {
+  if (n_population_vectors > 1) {
     stop("Data must contain only one `Population` vector for calculating population density.",
          call. = FALSE)
   }
 
-  n_area_fields <- population_and_area_data %>%
-    dplyr::filter(.data$label == "Land area in square kilometres") %>%
-    dplyr::pull(label) %>%
-    unique() %>%
-    length()
+  n_area_vectors <- population_and_area_data %>%
+    calculate_n_vectors("Land area in square kilometres")
 
-  if (n_population_fields != 1 | n_area_fields != 1) {
+  if (n_population_vectors != 1 | n_area_vectors != 1) {
     stop("Data must contain both `Population` and `Land area in square kilometres` vectors to calculate population density.")
   }
 

@@ -14,10 +14,15 @@
 #'
 #' @param data Data for census variables, from \code{\link{get_census_variables_and_children}}
 #'
-#' @return
 #' @export
 #'
 #' @examples
+#' get_census_variables_and_children(
+#'   regions = list(CSD = c("3520005", "3521005")),
+#'   level = "CSD",
+#'   variables = c("v_CA16_401", "v_CA16_418")
+#' ) %>%
+#'   aggregate_census_variables()
 aggregate_census_variables <- function(data) {
 
   # Check for necessary columns - units, aggregation_type, geo_uid, vector, value, highest_parent_vector

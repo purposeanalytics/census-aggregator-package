@@ -28,7 +28,7 @@ Get data for census variables and all of their children (and their childrens' ch
 }
 \examples{
 get_census_variables_and_children(
- regions = list(CSD = c("3520005", "3521005", "3521010")),
- level = "CSD", variables = c("v_CA16_404", "v_CA16_548")
+  regions = list(CSD = c("3520005", "3521005", "3521010")),
+  level = "CSD", variables = c("v_CA16_404", "v_CA16_548")
 )
 }

@@ -13,6 +13,7 @@ Imports:
     cancensus,
     curl,
     dplyr,
+    glue,
     magrittr,
     purrr,
     rlang,

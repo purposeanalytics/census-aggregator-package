@@ -19,8 +19,7 @@ variables <-
     ~vector, ~vector_label, ~vector_label_short,
     "v_CA16_401", "Population, 2016", "population_2016",
     "v_CA16_402", "Population, 2011", "population_2011",
-    "v_CA16_403", "Population percentage change, 2011 to 2016", "population_change",
-    "v_CA16_406", "Population density per square kilometre", "population_density",
+    "v_CA16_407", "Land area in square kilometres", "area",
     "v_CA16_1", "Total - Age", "age",
     "v_CA16_418", "Private households by household size", "household_size",
     "v_CA16_484", "Total number of census families in private households - 100% data", "family_type",
@@ -93,6 +92,11 @@ filter_breakdown_vectors <- function(data, vector) {
   data
 }
 
+# Aggregate vectors - treat v_CA16_407 (land area) separately, since it will be used for population density, and v_CA16_402 (population 2011) separately, since it will be used for population change
+
+variables <- variables %>%
+  filter(!(vector %in% c("v_CA16_407", "v_CA16_402")))
+
 data_breakdown <- map_dfr(
   variables[["vector"]],
   function(vector) {
@@ -127,7 +131,18 @@ data %>%
 
 # Population change (2011 to 2016)
 
+```{r population_change}
+data %>%
+  aggregate_population_change()
+```
+
 # Population density
+
+```{r population_density}
+data %>%
+  filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
+  aggregate_population_density()
+```   
 
 # Private households by household size
 

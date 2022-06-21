@@ -35,7 +35,8 @@ get_census_variables_and_children <- function(dataset = "CA16",
     dataset = dataset,
     regions = regions,
     level = level,
-    vectors = unique(children_vectors[["vector"]])
+    vectors = unique(children_vectors[["vector"]]),
+    quiet = quiet
   )
 
   # Add label and units, derive "aggregation_type"

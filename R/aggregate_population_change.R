@@ -1,4 +1,5 @@
 aggregate_population_change <- function(data) {
+
   # Filter for population data only, get year from each
   population_data <- data %>%
     dplyr::filter(stringr::str_detect(.data$label, "Population, ")) %>%
@@ -8,6 +9,16 @@ aggregate_population_change <- function(data) {
     )
 
   # Check that data contains 2 population vectors
+  n_population_vectors <- population_data %>%
+    dplyr::filter(stringr::str_detect(label, "Population, ")) %>%
+    dplyr::pull(label) %>%
+    unique() %>%
+    length()
+
+  if (n_population_vectors != 2) {
+    stop("Data must contain two distinct years of `Population` vectors to calculate population change.",
+         call. = FALSE)
+  }
 
   # Aggregate each separately
   population_data <- population_data %>%

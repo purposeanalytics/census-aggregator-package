@@ -5,6 +5,28 @@ aggregate_population_density <- function(data) {
       .data$label == "Land area in square kilometres")
 
   # Check it contains the right fields - only ONE population field allowed
+  n_population_fields <- population_and_area_data %>%
+    dplyr::filter(stringr::str_detect(.data$label, "Population, ")) %>%
+    dplyr::pull(label) %>%
+    unique() %>%
+    length()
+
+  if (n_population_fields > 1) {
+    stop("Data must contain only one `Population` vector for calculating population density.",
+         call. = FALSE)
+  }
+
+  n_area_fields <- population_and_area_data %>%
+    dplyr::filter(.data$label == "Land area in square kilometres") %>%
+    dplyr::pull(label) %>%
+    unique() %>%
+    length()
+
+  if (n_population_fields != 1 | n_area_fields != 1) {
+    stop("Data must contain both `Population` and `Land area in square kilometres` vectors to calculate population density.")
+  }
+
+  # Must contain both population and area
 
   # Aggregate each separately
   population_and_area_data <- population_and_area_data %>%

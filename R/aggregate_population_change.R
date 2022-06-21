@@ -29,7 +29,8 @@ aggregate_population_change <- function(data) {
 
   if (n_population_vectors != 2) {
     stop("Data must contain two distinct years of `Population` vectors to calculate population change.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
 
   # Aggregate each separately

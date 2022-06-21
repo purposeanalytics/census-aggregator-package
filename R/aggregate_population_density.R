@@ -25,7 +25,8 @@ aggregate_population_density <- function(data) {
 
   if (n_population_vectors > 1) {
     stop("Data must contain only one `Population` vector for calculating population density.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
 
   n_area_vectors <- population_and_area_data %>%

@@ -42,12 +42,14 @@ aggregate_census_variables <- function(data) {
     } else {
       # If not, do not aggregate and just warn / drop data
       units_aggregation_split <- stringr::str_split(units_aggregation, "_", simplify = TRUE)
+      vectors_dropped <- paste0(unique(data[["vector"]]), collapse = ", ")
       warning(
         "Aggregation for vectors with ",
         "`units: ", units_aggregation_split[[1]], "` ",
         "and ",
         "`aggregation_type: ", units_aggregation_split[[2]], "` ",
-        "is not available. Vectors with this combination have been dropped.",
+        "is not available. ",
+        "Vectors with this combination have been dropped: ", vectors_dropped, ".",
         call. = FALSE
       )
 

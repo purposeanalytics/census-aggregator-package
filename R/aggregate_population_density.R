@@ -2,15 +2,15 @@
 #'
 #' Average population density across multiple geographies.
 #'
-#' @param data Data for census variables, from \code{\link{get_census_variables_and_children}}. Must contain a vector with label "Land area in square kilometres" and one vector containing "Population" in the label.
+#' @param data Data for census vectors, from \code{\link{get_census_vectors_and_children}}. Must contain a vector with label "Land area in square kilometres" and one vector containing "Population" in the label.
 #'
 #' @export
 #'
 #' @examples
-#' get_census_variables_and_children(
+#' get_census_vectors_and_children(
 #'   regions = list(CSD = c("3520005", "3521005")),
 #'   level = "CSD",
-#'   variables = c("v_CA16_401", "v_CA16_407")
+#'   vectors = c("v_CA16_401", "v_CA16_407")
 #' ) %>%
 #'   aggregate_population_density()
 aggregate_population_density <- function(data) {
@@ -42,7 +42,7 @@ aggregate_population_density <- function(data) {
   population_and_area_data <- population_and_area_data %>%
     dplyr::mutate(label_short = ifelse(.data$label == "Land area in square kilometres", "area", "population")) %>%
     split(.$label_short) %>%
-    purrr::map_dfr(aggregate_census_variables, .id = "label_short")
+    purrr::map_dfr(aggregate_census_vectors, .id = "label_short")
 
   population_data <- population_and_area_data %>%
     dplyr::filter(.data$label_short == "population")

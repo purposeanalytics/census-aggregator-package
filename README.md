@@ -4,7 +4,7 @@
 # censusaggregate
 
 The goal of censusaggregate is to easily retrieve and aggregate Canadian
-census variables, and their breakdowns, across multiple (shared)
+census vectors, and their breakdowns, across multiple (shared)
 geographies.
 
 ## Installation
@@ -23,6 +23,7 @@ TODO
 ## Usage
 
 ``` r
+library(cancensus)
 library(censusaggregate)
 library(dplyr)
 #> 
@@ -36,7 +37,7 @@ library(dplyr)
 
 dataset <- "CA16"
 
-vector <- list_census_variables(dataset) %>%
+vector <- list_census_vectors(dataset) %>%
   filter(label == "Occupied private dwellings by structural type of dwelling data")
 
 vector
@@ -47,11 +48,11 @@ vector
 
 vector <- vector[["vector"]]
 
-vector_with_breakdowns <- get_census_variables_and_children(
+vector_with_breakdowns <- get_census_vectors_and_children(
   dataset,
   regions = list(CSD = c("3520005", "3521005", "3521010")),
   level = "CSD",
-  variables = vector
+  vectors = vector
 )
 
 vector_with_breakdowns %>%
@@ -73,7 +74,7 @@ vector_with_breakdowns %>%
 #> $ value                 <dbl> 1112930, 240915, 168015, 269675, 90780, 87550, 4…
 
 vector_with_breakdowns %>%
-  aggregate_census_variables() %>%
+  aggregate_census_vectors() %>%
   glimpse()
 #> Rows: 10
 #> Columns: 11
@@ -96,5 +97,5 @@ censusaggregate heavily relies on existing work from [`cancensus`]()
 (and the related [CensusMapper]()) to fetch census data. It has some
 similar functionality to the [`tongfen`]() package, but is not as
 feature rich - rather, it focuses on exclusively getting and aggregating
-Canadian census variables across multiple (shared) geographies (in
+Canadian census vectors across multiple (shared) geographies (in
 contrast to `tongfen`, which …)

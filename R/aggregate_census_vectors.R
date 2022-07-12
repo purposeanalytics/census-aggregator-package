@@ -1,6 +1,6 @@
-#' Aggregate census variables
+#' Aggregate census vectors
 #'
-#' Automatically aggregate census variables from multiple geographies, based on the type of data. See Details.
+#' Automatically aggregate census vectors from multiple geographies, based on the type of data. See Details.
 #'
 #' The following types of vectors are supported:
 #'
@@ -12,18 +12,18 @@
 #'
 #' ## Units: Currency, Aggregation Type: Average
 #'
-#' @param data Data for census variables, from \code{\link{get_census_variables_and_children}}
+#' @param data Data for census vectors, from \code{\link{get_census_vectors_and_children}}
 #'
 #' @export
 #'
 #' @examples
-#' get_census_variables_and_children(
+#' get_census_vectors_and_children(
 #'   regions = list(CSD = c("3520005", "3521005")),
 #'   level = "CSD",
-#'   variables = c("v_CA16_401", "v_CA16_418")
+#'   vectors = c("v_CA16_401", "v_CA16_418")
 #' ) %>%
-#'   aggregate_census_variables()
-aggregate_census_variables <- function(data) {
+#'   aggregate_census_vectors()
+aggregate_census_vectors <- function(data) {
 
   # Check for necessary columns - units, aggregation_type, geo_uid, vector, value, highest_parent_vector
   check_data(data)
@@ -72,7 +72,7 @@ check_data <- function(data) {
   if (!all(contains_necessary_columns)) {
     stop("data must contain all columns:",
       paste(columns, collapse = ", "),
-      ". It should be the output from `get_census_variables_and_children()`.",
+      ". It should be the output from `get_census_vectors_and_children()`.",
       call. = FALSE
     )
   }

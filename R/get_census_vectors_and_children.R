@@ -1,29 +1,25 @@
-#' Get census variables and children
+#' Get census vectors and children
 #'
-#' Get data for census variables and all of their children (and their childrens' children, etc).
+#' Get data for census vectors and all of their children (and their childrens' children, etc).
 #'
-#' @param dataset The dataset to query variables from. Defaults to "CA16", the 2016 Canadian Census.
+#' @param dataset The dataset to query vectors from. Defaults to "CA16", the 2016 Canadian Census.
 #' @inheritParams cancensus::get_census
-#' @param variables An R vector containing the variable short codes for the Census variables to download. Variable short codes can be found via \link[cancensus]{list_census_vectors}.
+#' @param vectors An R vector containing the vector short codes for the Census vectors to download. Vector short codes can be found via \link[cancensus]{list_census_vectors}.
 #'
 #' @export
 #'
 #' @examples
-#' get_census_variables_and_children(
+#' get_census_vectors_and_children(
 #'   regions = list(CSD = c("3520005", "3521005", "3521010")),
-#'   level = "CSD", variables = c("v_CA16_404", "v_CA16_548")
+#'   level = "CSD", vectors = c("v_CA16_404", "v_CA16_548")
 #' )
-get_census_variables_and_children <- function(dataset = "CA16",
-                                              regions = "Regions",
-                                              level,
-                                              variables,
-                                              quiet = TRUE) {
+get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions", level, vectors, quiet = TRUE) {
 
   # Check access to internet
   check_internet()
 
-  # Get all child variables for each vector
-  children_vectors <- variables %>%
+  # Get all child vectors for each vector
+  children_vectors <- vectors %>%
     purrr::set_names() %>%
     purrr::map_dfr(cancensus::child_census_vectors,
       keep_parent = TRUE,
@@ -47,12 +43,7 @@ get_census_variables_and_children <- function(dataset = "CA16",
     dplyr::relocate(.data$aggregation_type, .after = .data$aggregation)
 }
 
-get_and_tidy_census_data <- function(dataset,
-                                     regions,
-                                     level,
-                                     vectors,
-                                     labels = "short",
-                                     quiet = TRUE) {
+get_and_tidy_census_data <- function(dataset, regions, level, vectors, labels = "short", quiet = TRUE) {
   cancensus::get_census(dataset,
     regions = regions,
     level = level,

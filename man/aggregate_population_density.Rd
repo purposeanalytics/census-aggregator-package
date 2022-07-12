@@ -7,16 +7,16 @@
 aggregate_population_density(data)
 }
 \arguments{
-\item{data}{Data for census variables, from \code{\link{get_census_variables_and_children}}. Must contain a vector with label "Land area in square kilometres" and one vector containing "Population" in the label.}
+\item{data}{Data for census vectors, from \code{\link{get_census_vectors_and_children}}. Must contain a vector with label "Land area in square kilometres" and one vector containing "Population" in the label.}
 }
 \description{
 Average population density across multiple geographies.
 }
 \examples{
-get_census_variables_and_children(
+get_census_vectors_and_children(
   regions = list(CSD = c("3520005", "3521005")),
   level = "CSD",
-  variables = c("v_CA16_401", "v_CA16_407")
+  vectors = c("v_CA16_401", "v_CA16_407")
 ) \%>\%
   aggregate_population_density()
 }

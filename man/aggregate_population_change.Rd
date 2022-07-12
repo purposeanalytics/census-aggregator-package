@@ -7,16 +7,16 @@
 aggregate_population_change(data)
 }
 \arguments{
-\item{data}{Data for census variables, from \code{\link{get_census_variables_and_children}}. Must contain exactly two vectors with label containing "Population", e.g. "Population, 2016" and "Population, 2011" to get the population change from 2011 to 2016.}
+\item{data}{Data for census vectors, from \code{\link{get_census_vectors_and_children}}. Must contain exactly two vectors with label containing "Population", e.g. "Population, 2016" and "Population, 2011" to get the population change from 2011 to 2016.}
 }
 \description{
 Average population density across multiple geographies.
 }
 \examples{
-get_census_variables_and_children(
+get_census_vectors_and_children(
   regions = list(CSD = c("3520005", "3521005")),
   level = "CSD",
-  variables = c("v_CA16_401", "v_CA16_402")
+  vectors = c("v_CA16_401", "v_CA16_402")
 ) \%>\%
   aggregate_population_change()
 }

@@ -1,0 +1,65 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# censusaggregate
+
+The goal of censusaggregate is to easily retrieve and aggregate Canadian census variables, and their breakdowns, across multiple (shared) geographies.
+
+## Installation
+
+You can install censusaggregate from GitHub:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("purposeanalytics/census-aggregator-package")
+```
+
+## API key and cacheing
+
+TODO
+
+## Usage
+
+```{r}
+library(censusaggregate)
+library(dplyr)
+
+dataset <- "CA16"
+
+vector <- list_census_variables(dataset) %>%
+  filter(label == "Occupied private dwellings by structural type of dwelling data")
+
+vector
+
+vector <- vector[["vector"]]
+
+vector_with_breakdowns <- get_census_variables_and_children(
+  dataset,
+  regions = list(CSD = c("3520005", "3521005", "3521010")),
+  level = "CSD",
+  variables = vector
+)
+
+vector_with_breakdowns %>%
+  glimpse()
+
+vector_with_breakdowns %>%
+  aggregate_census_variables() %>%
+  glimpse()
+```
+
+## Related work
+
+censusaggregate heavily relies on existing work from [`cancensus`]() (and the related [CensusMapper]()) to fetch census data. It has some similar functionality to the [`tongfen`]() package, but is not as feature rich - rather, it focuses on exclusively getting and aggregating Canadian census variables across multiple (shared) geographies (in contrast to `tongfen`, which ...)

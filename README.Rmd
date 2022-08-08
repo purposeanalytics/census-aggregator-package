@@ -26,11 +26,28 @@ You can install censusaggregate from GitHub:
 remotes::install_github("purposeanalytics/census-aggregator-package")
 ```
 
-## API key and cacheing
+## API key and caching
 
-TODO
+censusaggregate uses the [`cancensus`](https://github.com/mountainMath/cancensus) package and [CensusMapper API](https://censusmapper.ca/). As per their documentation:
+
+<blockquote>
+You can obtain a free API key by [signing up](https://censusmapper.ca/users/sign_up) for a CensusMapper account. To check your API key, just go to "Edit Profile" (in the top-right of the CensusMapper menu bar). Once you have your key, you can store it in your system environment so it is automatically used in API calls. To do so just enter cancensus::set_api_key(<your_api_key>, install = TRUE).
+
+CensusMapper API keys are free and public API quotas are generous; however, due to incremental costs of serving large quantities of data, there are some limits to API usage in place. For most use cases, these API limits should not be an issue. Production uses with large extracts of detailed geographies may run into API quota limits.
+
+</blockquote>
+
+In addition, censusaggregate uses `cancensus`' caching infrastructure to avoid repeat calls to the API:
+
+<blockquote>
+
+By default, cancensus caches in R's temporary directory, but this cache is not persistent across sessions. In order to speed up performance, reduce quota usage, and reduce the need for unnecessary network calls, we recommend assigning a persistent local cache using cancensus::set_cache_path(<local cache path>, install = TRUE), this enables more efficient loading and reuse of downloaded data. Users will be prompted with a suggestion to change their default cache location when making API calls if one has not been set yet.
+
+</blockquote>
 
 ## Usage
+
+censusaggregate has two primary functions, the first of which is to retrieve a census vector and *all* of its child vectors (children). Child vectors further break down or provide additional detail to a vector. For example, if we want to get the vector that describes the structural type of dwellings, first we list all vectors for the 2016 census, then filter for the one of interest:
 
 ```{r}
 library(cancensus)
@@ -43,7 +60,11 @@ vector <- list_census_vectors(dataset) %>%
   filter(label == "Occupied private dwellings by structural type of dwelling data")
 
 vector
+```
 
+Next we can retrieve the vector using its code (v_CA16_408) and its children, for a given set of regions and at a given level. Here, we retrieve data for three Census subdivisions (CSD), then look at the data, which includes information like the highest parent vector, a description of the vector, the units its in, its direct parent (since children can be nested), the geographic identifier of the CSD, the population and number of households in that CSD, and the data value itself.
+
+```{r}
 vector <- vector[["vector"]]
 
 vector_with_breakdowns <- get_census_vectors_and_children(
@@ -53,13 +74,36 @@ vector_with_breakdowns <- get_census_vectors_and_children(
   vectors = vector
 )
 
-vector_with_breakdowns %>%
-  glimpse()
+vector_with_breakdowns
+```
 
+We can see that there are 10 vectors returned - 9 breakdowns and the original parent vector - each of which with 3 records, one for each of the CSDs we requested data for.
+
+```{r}
+vector_with_breakdowns %>%
+  count(vector, parent_vector, label)
+```
+
+And we can quickly look at the values themselves:
+
+```{r}
+vector_with_breakdowns %>%
+  select(vector, label, geo_uid, value)
+```
+
+The second function of censusaggregate is to aggregate the census vectors across multiple geographies. In this case, we want to aggregate each variable so that there is only one record for each, combining the values across the three CSDs. To do this, we use `aggregate_census_vectors`:
+
+```{r}
 vector_with_breakdowns %>%
   aggregate_census_vectors() %>%
-  glimpse()
+  select(vector, label, value, value_proportion)
 ```
+
+In this case, it returns a field `value` which is the sum of the values within the three CSDs, and `value_proportion`, which breaks down the value of the highest parent vector (v_CA16_408). For example, there are 448,000 dwellings (?? people) living in a Single-detached house in the areas, which represents 29.4% of all households in that area.
+
+## Supported variables
+
+
 
 ## Related work
 

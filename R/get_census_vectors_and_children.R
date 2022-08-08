@@ -39,8 +39,7 @@ get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions
   children_vectors %>%
     dplyr::left_join(census_vectors, by = "vector") %>%
     dplyr::distinct() %>%
-    dplyr::mutate(aggregation_type = stringr::str_remove(.data$aggregation, " of.*")) %>%
-    dplyr::relocate(.data$aggregation_type, .after = .data$aggregation)
+    derive_aggregation_type()
 }
 
 get_and_tidy_census_data <- function(dataset, regions, level, vectors, labels = "short", quiet = TRUE) {

@@ -199,10 +199,86 @@ vector_with_breakdowns %>%
 In this case, it returns a field `value` which is the sum of the values
 within the three CSDs, and `value_proportion`, which breaks down the
 value of the highest parent vector (v\_CA16\_408). For example, there
-are 448,000 dwellings (?? people) living in a Single-detached house in
-the areas, which represents 29.4% of all households in that area.
+are 448,000 households in total a Single-detached house in the queried
+CSDs, which represents 29.4% of all households in those CSDs.
 
-## Supported variables
+## Supported vector aggregation
+
+The vector aggregation happens automatically, based on the vectors’
+units and aggregation type:
+
+``` r
+vectors <- list_census_vectors("CA16") %>%
+  derive_aggregation_type()
+
+vectors  %>%
+  count(units, aggregation_type)
+#> # A tibble: 6 × 3
+#>   units              aggregation_type     n
+#>   <fct>              <chr>            <int>
+#> 1 Number             Additive          6448
+#> 2 Number             Average              1
+#> 3 Currency           Average             41
+#> 4 Currency           Median              41
+#> 5 Ratio              Average             13
+#> 6 Percentage (0-100) Average             79
+```
+
+In the previous example, we worked with vectors with `units = "Number"`
+and `aggregation_type = "Additive"`, which is one of the three supported
+aggregations:
+
+1.  Units: Number, Aggregation Type: Additive
+2.  Units: Percentage (0-100), Aggregation Type: Average
+3.  Units: Currency, Aggregation Type: Average
+
+### Units: Number, Aggregation Type: Additive
+
+The `value` is derived by summing all of the `value` for each vector,
+across geographies. The result is a count (e.g. population, households).
+An additional field, `value_proportion`, is derived, describing what
+proportion of the total count (e.g. of population, households) from the
+highest parent vector falls within each child vector.
+
+### Units: Percentage (0-100), Aggregation Type: Average
+
+### Units: Currency, Aggregation Type: Average
+
+### Special cases
+
+#### aggregate\_population\_change()
+
+#### aggregate\_population\_density()
+
+### Unsupported aggregations
+
+The following are not supported:
+
+1.  Units: Number, Aggregation Type: Average
+2.  Units: Currency, Aggregation Type: Median
+3.  Units: Ratio, Aggregation Type: Average
+
+If you try to aggregate this data, a message and empty tibble will be
+returned:
+
+``` r
+median_vector <- vectors %>%
+  filter(units == "Currency", aggregation_type == "Median") %>%
+  slice(1) %>%
+  pull(vector)
+
+get_census_vectors_and_children(
+  dataset,
+  regions = list(CSD = c("3520005", "3521005", "3521010")),
+  level = "CSD",
+  vectors = median_vector
+) %>%
+  aggregate_census_vectors()
+#> Warning: Aggregation for vectors with `units: Currency` and `aggregation_type:
+#> Median` is not available. Vectors with this combination have been dropped:
+#> v_CA16_2207.
+#> # A tibble: 0 × 0
+```
 
 ## Related work
 

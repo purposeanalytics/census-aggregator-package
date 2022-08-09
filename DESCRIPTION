@@ -1,10 +1,15 @@
 Package: censusaggregate
-Title: What the Package Does (One Line, Title Case)
+Title: Retrieve and aggregate Canadian census data
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    c(person(given = "Sharla",
+             family = "Gelfand",
+             role = c("aut", "cre"),
+             email = "sharla.gelfand@gmail.com"),
+      person(given = "Purpose Analytics",
+             role = "cph"))
+Description: censusaggregate is a package designed to easily retrieve and
+    aggregate Canadian census data.   
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

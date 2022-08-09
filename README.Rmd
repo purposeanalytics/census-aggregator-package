@@ -31,7 +31,7 @@ remotes::install_github("purposeanalytics/census-aggregator-package")
 censusaggregate uses the [`cancensus`](https://github.com/mountainMath/cancensus) package and [CensusMapper API](https://censusmapper.ca/). As per their documentation:
 
 <blockquote>
-You can obtain a free API key by [signing up](https://censusmapper.ca/users/sign_up) for a CensusMapper account. To check your API key, just go to "Edit Profile" (in the top-right of the CensusMapper menu bar). Once you have your key, you can store it in your system environment so it is automatically used in API calls. To do so just enter cancensus::set_api_key(<your_api_key>, install = TRUE).
+You can obtain a free API key by [signing up](https://censusmapper.ca/users/sign_up) for a CensusMapper account. To check your API key, just go to "Edit Profile" (in the top-right of the CensusMapper menu bar). Once you have your key, you can store it in your system environment so it is automatically used in API calls. To do so just enter cancensus::set_api_key(\<your_api_key\>, install = TRUE).
 
 CensusMapper API keys are free and public API quotas are generous; however, due to incremental costs of serving large quantities of data, there are some limits to API usage in place. For most use cases, these API limits should not be an issue. Production uses with large extracts of detailed geographies may run into API quota limits.
 
@@ -67,9 +67,11 @@ Next we can retrieve the vector using its code (v_CA16_408) and its children, fo
 ```{r}
 vector <- vector[["vector"]]
 
+csd_regions <- list(CSD = c("3520005", "3521005", "3521010"))
+
 vector_with_breakdowns <- get_census_vectors_and_children(
   dataset,
-  regions = list(CSD = c("3520005", "3521005", "3521010")),
+  regions = csd_regions,
   level = "CSD",
   vectors = vector
 )
@@ -129,9 +131,53 @@ The `value` is derived by summing all of the `value` for each vector, across geo
 
 ### Special cases
 
+There are two vectors, Population Change and Population Density, that require use of special functions instead of the automatic `aggregate_census_vectors`.
+
 #### aggregate_population_change()
 
+To aggregate population change across geographies, `aggregate_population_change` is used on data that contains two population vectors:
+
+```{r}
+population_vectors <- vectors %>% 
+  filter(label %in% c("Population, 2016", "Population, 2011")) %>%
+  pull(vector)
+
+population_change_data <- get_census_vectors_and_children(
+  dataset = dataset,
+  regions = csd_regions,
+  level = "CSD",
+  vectors = population_vectors
+)
+
+population_change_data %>%
+  select(vector, label, geo_uid, value)
+
+population_change_data %>%
+  aggregate_population_change()
+```
+
 #### aggregate_population_density()
+
+Similarly, the aggregate population density across geographies, `aggregate_population_density` is used, passing data that contains a population vector and the Land area in square kilometres vector:
+
+```{r}
+population_density_vectors <- vectors %>%
+  filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
+  pull(vector)
+
+population_density_data <- get_census_vectors_and_children(
+  dataset = dataset,
+  regions = csd_regions,
+  level = "CSD",
+  vectors = population_density_vectors
+)
+
+population_density_data %>%
+  select(vector, label, geo_uid, value)
+
+population_density_data %>%
+  aggregate_population_density()
+```
 
 ### Unsupported aggregations
 

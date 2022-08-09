@@ -30,7 +30,8 @@ up](https://censusmapper.ca/users/sign_up) for a CensusMapper account.
 To check your API key, just go to “Edit Profile” (in the top-right of
 the CensusMapper menu bar). Once you have your key, you can store it in
 your system environment so it is automatically used in API calls. To do
-so just enter cancensus::set\_api\_key(<your_api_key>, install = TRUE).
+so just enter cancensus::set\_api\_key(&lt;your\_api\_key&gt;, install =
+TRUE).
 
 CensusMapper API keys are free and public API quotas are generous;
 however, due to incremental costs of serving large quantities of data,
@@ -102,9 +103,11 @@ itself.
 ``` r
 vector <- vector[["vector"]]
 
+csd_regions <- list(CSD = c("3520005", "3521005", "3521010"))
+
 vector_with_breakdowns <- get_census_vectors_and_children(
   dataset,
-  regions = list(CSD = c("3520005", "3521005", "3521010")),
+  regions = csd_regions,
   level = "CSD",
   vectors = vector
 )
@@ -246,9 +249,85 @@ highest parent vector falls within each child vector.
 
 ### Special cases
 
+There are two vectors, Population Change and Population Density, that
+require use of special functions instead of the automatic
+`aggregate_census_vectors`.
+
 #### aggregate\_population\_change()
 
+To aggregate population change across geographies,
+`aggregate_population_change` is used on data that contains two
+population vectors:
+
+``` r
+population_vectors <- vectors %>% 
+  filter(label %in% c("Population, 2016", "Population, 2011")) %>%
+  pull(vector)
+
+population_change_data <- get_census_vectors_and_children(
+  dataset = dataset,
+  regions = csd_regions,
+  level = "CSD",
+  vectors = population_vectors
+)
+
+population_change_data %>%
+  select(vector, label, geo_uid, value)
+#> # A tibble: 6 × 4
+#>   vector     label            geo_uid   value
+#>   <chr>      <chr>            <chr>     <dbl>
+#> 1 v_CA16_401 Population, 2016 3520005 2731571
+#> 2 v_CA16_401 Population, 2016 3521005  721599
+#> 3 v_CA16_401 Population, 2016 3521010  593638
+#> 4 v_CA16_402 Population, 2011 3520005 2615060
+#> 5 v_CA16_402 Population, 2011 3521005  713443
+#> 6 v_CA16_402 Population, 2011 3521010  523906
+
+population_change_data %>%
+  aggregate_population_change()
+#> # A tibble: 1 × 7
+#>   type  label       units aggregation aggregation_type details             value
+#>   <fct> <chr>       <fct> <chr>       <chr>            <chr>               <dbl>
+#> 1 Total Population… Numb… Additive    Additive         CA 2016 Census; P… 0.0505
+```
+
 #### aggregate\_population\_density()
+
+Similarly, the aggregate population density across geographies,
+`aggregate_population_density` is used, passing data that contains a
+population vector and the Land area in square kilometres vector:
+
+``` r
+population_density_vectors <- vectors %>%
+  filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
+  pull(vector)
+
+population_density_data <- get_census_vectors_and_children(
+  dataset = dataset,
+  regions = csd_regions,
+  level = "CSD",
+  vectors = population_density_vectors
+)
+
+population_density_data %>%
+  select(vector, label, geo_uid, value)
+#> # A tibble: 6 × 4
+#>   vector     label                          geo_uid    value
+#>   <chr>      <chr>                          <chr>      <dbl>
+#> 1 v_CA16_401 Population, 2016               3520005 2731571 
+#> 2 v_CA16_401 Population, 2016               3521005  721599 
+#> 3 v_CA16_401 Population, 2016               3521010  593638 
+#> 4 v_CA16_407 Land area in square kilometres 3520005     630.
+#> 5 v_CA16_407 Land area in square kilometres 3521005     292.
+#> 6 v_CA16_407 Land area in square kilometres 3521010     266.
+
+population_density_data %>%
+  aggregate_population_density()
+#> # A tibble: 1 × 7
+#>   type  label       units aggregation aggregation_type details             value
+#>   <fct> <chr>       <fct> <chr>       <chr>            <chr>               <dbl>
+#> 1 Total Population… Numb… Additive    Additive         CA 2016 Census; Po… 3404.
+```
 
 ### Unsupported aggregations
 

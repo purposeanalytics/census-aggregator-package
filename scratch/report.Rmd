@@ -2,19 +2,25 @@
 output: html_document
 ---
 
-```{r, echo = FALSE, warning = FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
 
-library(dplyr, warn.conflicts = FALSE)
+```{r packages}
+library(dplyr)
 library(censusaggregate)
 library(purrr)
+library(scales)
+library(knitr)
+library(kableExtra)
+library(tidyr)
 ```
 
 ```{r data}
 regions <- list(CSD = c("3520005", "3521005", "3521010"))
 level <- "CSD"
 
-variables <-
+vectors <-
   tibble::tribble(
     ~vector, ~vector_label, ~vector_label_short,
     "v_CA16_401", "Population, 2016", "population_2016",
@@ -36,13 +42,13 @@ variables <-
     "v_CA16_5051", "Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data", "educational_attainment"
   )
 
-# Get data for variables and children ----
+# Get data for vectors and children ----
 
-data <- get_census_variables_and_children(
+data <- get_census_vectors_and_children(
   regions = regions,
   level = level,
-  variables = variables[["vector"]], 
-  quiet = FALSE
+  vectors = vectors[["vector"]],
+  quiet = TRUE
 )
 ```
 
@@ -51,7 +57,7 @@ data <- get_census_variables_and_children(
 # Choose which vectors to keep within each
 
 breakdown_vectors <- list(
-  "v_CA16_401" = NA, 
+  "v_CA16_401" = NA,
   "v_CA16_418" = c("v_CA16_419", "v_CA16_420", "v_CA16_421", "v_CA16_422", "v_CA16_423"),
   "v_CA16_3954" = c(
     "v_CA16_3957", "v_CA16_3960", "v_CA16_3963", "v_CA16_3966",
@@ -76,9 +82,8 @@ breakdown_vectors <- list(
 )
 
 filter_breakdown_vectors <- function(data, vector) {
-  
   vector_breakdown_vectors <- breakdown_vectors[[vector]]
-  
+
   if (!all(is.na(vector_breakdown_vectors))) {
     data <- data %>%
       filter(
@@ -96,62 +101,86 @@ filter_breakdown_vectors <- function(data, vector) {
 
 # Aggregate vectors - treat v_CA16_407 (land area) separately, since it will be used for population density, and v_CA16_402 (population 2011) separately, since it will be used for population change
 
-variables <- variables %>%
+vectors <- vectors %>%
   filter(!(vector %in% c("v_CA16_407", "v_CA16_402")))
 
 data_breakdown <- map_dfr(
-  variables[["vector"]],
+  vectors[["vector"]],
   function(vector) {
     data %>%
       filter_breakdown_vectors(vector) %>%
-      aggregate_census_variables()
+      aggregate_census_vectors()
   }
 ) %>%
-  select(highest_parent_vector, label, value, value_proportion) %>%
+  select(highest_parent_vector, vector, label, value, value_proportion) %>%
   distinct() %>%
-  left_join(variables, by = c("highest_parent_vector" = "vector")) %>%
-  select(highest_parent_vector, vector_label_short, label, value, value_proportion)
+  left_join(vectors, by = c("highest_parent_vector" = "vector")) %>%
+  select(highest_parent_vector, vector, vector_label_short, label, value, value_proportion)
 ```
 
-
-# Population
-
-```{r population}
-data_breakdown %>%
-  filter(vector_label_short == "population_2016") %>%
-  select(label, value, value_proportion)
-```
-
-# Number of households
+# Summary statistics
 
 ```{r}
-data %>%
+# Number of geographies (CSDs/CTs), population, number of households, population change (2011 to 2016), population density
+
+areas_selected <- glue::glue("{n} {geography}{s}",
+  n = length(unlist(regions)),
+  geography = case_when(
+    level == "CSD" ~ "Census subdivision",
+    level == "CT" ~ "Census tract"
+  ),
+  s = ifelse(n > 1, "s", "")
+)
+
+population <- data_breakdown %>%
+  filter(vector_label_short == "population_2016") %>%
+  pull(value) %>%
+  comma()
+
+households <- data %>%
   select(geo_uid, households) %>%
   distinct() %>%
-  summarise(across(households, sum, na.rm = TRUE))
-```
+  summarise(across(households, sum, na.rm = TRUE)) %>%
+  pull(households) %>%
+  comma()
 
-# Population change (2011 to 2016)
+population_change <- data %>%
+  aggregate_population_change() %>%
+  pull(value) %>%
+  percent(accuracy = 0.1)
 
-```{r population_change}
-data %>%
-  aggregate_population_change()
-```
-
-# Population density
-
-```{r population_density}
-data %>%
+population_density <- data %>%
   filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
-  aggregate_population_density()
+  aggregate_population_density() %>%
+  pull(value) %>%
+  comma()
+
+population_density <- glue::glue("{population_density} people per km^2")
+
+summary_statistics <- tribble(
+  ~field, ~value,
+  "Areas selected", areas_selected,
+  "Population", population,
+  "Households", households,
+  "Population change (2011 to 2016)", population_change,
+  "Population density", population_density
+) %>%
+  mutate(field = glue::glue("{field}:"))
+
+kable(summary_statistics, align = "lr", col.names = c("", "")) %>%
+  kableExtra::column_spec(column = 1, bold = TRUE)
 ```   
 
 # Private households by household size
 
 ```{r household_size}
 data_breakdown %>%
-  filter(vector_label_short == "household_size") %>%
-  select(label, value, value_proportion)
+  filter(
+    vector_label_short == "household_size",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```
 
 # Estimated median household income
@@ -175,16 +204,22 @@ data_breakdown %>%
 
 ```{r visible_minority}
 data_breakdown %>%
-  filter(vector_label_short == "visible_minority") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "visible_minority",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order(TRUE) %>%
+  plot_census_vector()
 ```
 
 # Household tenure
 
 ```{r household_tenure}
 data_breakdown %>%
-  filter(vector_label_short == "household_tenure") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "household_tenure",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```
 
 # Average shelter cost
@@ -193,8 +228,9 @@ data_breakdown %>%
 
 ```{r age}
 data_breakdown %>%
-  filter(vector_label_short == "age") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "age",
+    vector != highest_parent_vector
+  )
 ```
 
 # Language spoken at home
@@ -203,24 +239,33 @@ data_breakdown %>%
 
 ```{r knowledge_of_english}
 data_breakdown %>%
-  filter(vector_label_short == "knowledge_of_english") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "knowledge_of_english",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```
 
 # Immigrant status
 
 ```{r immigrant_status}
 data_breakdown %>%
-  filter(vector_label_short == "immigrant_status") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "immigrant_status",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```
 
 # Aboriginal identity
 
 ```{r aboriginal_identity}
 data_breakdown %>%
-  filter(vector_label_short == "aboriginal_identity") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "aboriginal_identity",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```
 
 # Country of origin
@@ -229,22 +274,31 @@ data_breakdown %>%
 
 ```{r educational_attainment}
 data_breakdown %>%
-  filter(vector_label_short == "educational_attainment") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "educational_attainment",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```
 
 # Family type
 
 ```{r family_type}
 data_breakdown %>%
-  filter(vector_label_short == "family_type") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "family_type",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```
 
 # Multiple family households
 
 ```{r household_type}
 data_breakdown %>%
-  filter(vector_label_short == "household_type") %>%
-  select(label, value, value_proportion)
+  filter(vector_label_short == "household_type",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
 ```

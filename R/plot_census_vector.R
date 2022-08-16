@@ -1,21 +1,14 @@
 #' Plot a neighbourhood profile variable
 #'
-#' @param data Neighbourhood profiles data for a given neighbourhood, from \link{neighbourhood_aggregate}, or for the city, from \link{city_aggregate}
+#' @param data Census data, aggregated via \code{\link{aggregate_census_vectors}}
 #' @param prop Whether the vector to be displayed is a proportion. Defaults to TRUE.
 #' @param width Passed along to str_wrap for wrapping y-axis labels. Defaults to a width of 20.
 #' @param dollar Whether the variable shown is in dollars. Defaults to FALSE.
-#' @param type Type of display, "plot" or "table". Defaults to "plot".
-#' @param static Whether the plot should be an interactive (FALSE) or static (TRUE) version. Defaults to FALSE.
 #'
 #' @export
 #'
-#' @examples {
-#'   neighbourhood_aggregate[["Danforth"]] %>%
-#'     display_neighbourhood_profile("household_size")
-#'
-#'   neighbourhood_aggregate[["Danforth"]] %>%
-#'     display_neighbourhood_profile("average_total_income")
-#' }
+#' @examples
+#' # TODO
 plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE) {
 
   # Select value_proportion if prop = TRUE

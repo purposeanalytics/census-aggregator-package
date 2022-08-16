@@ -18,10 +18,13 @@ Imports:
     cancensus,
     curl,
     dplyr,
+    forcats,
     glue,
     magrittr,
+    plotly,
     purrr,
     rlang,
+    scales,
     stringr,
     tibble,
     tidyr

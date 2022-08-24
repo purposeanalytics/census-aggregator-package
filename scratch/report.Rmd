@@ -3,8 +3,32 @@ output: html_document
 ---
 
 ```{r setup, echo = FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(
+  echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE,
+  out.width = "100%", fig.height = 2.25
+)
 ```
+
+```{css}
+.section-heading {
+  background-color: lightgrey;
+  padding-left: 5px;
+}
+
+.box {
+  height: 100px;
+  background-color: lightgrey;
+  text-align: center;
+  padding: 10px;
+  margin-right: 2px;
+}
+
+.box-last {
+  margin-right: 0;
+  margin-left: 2px;
+}
+```
+
 
 ```{r packages}
 library(dplyr)
@@ -14,14 +38,14 @@ library(scales)
 library(knitr)
 library(kableExtra)
 library(tidyr)
+library(stringr)
 ```
 
 ```{r data}
 regions <- list(CSD = c("3520005", "3521005", "3521010"))
 level <- "CSD"
 
-vectors <-
-  tibble::tribble(
+vectors <- tibble::tribble(
     ~vector, ~vector_label, ~vector_label_short,
     "v_CA16_401", "Population, 2016", "population_2016",
     "v_CA16_402", "Population, 2011", "population_2011",
@@ -68,6 +92,7 @@ breakdown_vectors <- list(
   "v_CA16_4836" = c("v_CA16_4837", "v_CA16_4838", "v_CA16_4839"),
   "v_CA16_4886" = "v_CA16_4888",
   "v_CA16_1" = c(
+    # 5 year breakdown
     "v_CA16_7", "v_CA16_25", "v_CA16_43", "v_CA16_64", "v_CA16_82",
     "v_CA16_100", "v_CA16_118", "v_CA16_136", "v_CA16_154", "v_CA16_172",
     "v_CA16_190", "v_CA16_208", "v_CA16_226", "v_CA16_247", "v_CA16_265",
@@ -118,9 +143,15 @@ data_breakdown <- map_dfr(
   select(highest_parent_vector, vector, vector_label_short, label, value, value_proportion)
 ```
 
-# Summary statistics
+::: {.section-heading}
 
-```{r}
+## Snapshot
+
+:::
+
+::::: {.row}
+
+```{r snapshot}
 # Number of geographies (CSDs/CTs), population, number of households, population change (2011 to 2016), population density
 
 areas_selected <- glue::glue("{n} {geography}{s}",
@@ -156,43 +187,318 @@ population_density <- data %>%
   comma()
 
 population_density <- glue::glue("{population_density} people per km^2")
+#
+# summary_statistics <- tribble(
+#   ~field, ~value,
+#   "Areas selected", areas_selected,
+#   "Population", population,
+#   "Households", households,
+#   "Population change (2011 to 2016)", population_change,
+#   "Population density", population_density
+# ) %>%
+#   mutate(field = glue::glue("{field}:"))
+#
+# kable(summary_statistics, align = "lr", col.names = c("", "")) %>%
+#   kableExtra::column_spec(column = 1, bold = TRUE)
+```
 
-summary_statistics <- tribble(
-  ~field, ~value,
-  "Areas selected", areas_selected,
-  "Population", population,
-  "Households", households,
-  "Population change (2011 to 2016)", population_change,
-  "Population density", population_density
-) %>%
-  mutate(field = glue::glue("{field}:"))
+:::: {.col-sm-3}
 
-kable(summary_statistics, align = "lr", col.names = c("", "")) %>%
-  kableExtra::column_spec(column = 1, bold = TRUE)
-```   
+::: {.box}
 
-# Private households by household size
+#### Population
+
+`r population`
+
+:::
+
+::::
+
+:::: {.col-sm-3}
+
+::: {.box}
+
+#### Population change
+
+`r population_change`
+
+:::
+
+::::
+
+:::: {.col-sm-3}
+
+::: {.box}
+
+#### Population density
+
+`r population_density`
+
+:::
+
+::::
+
+:::: {.col-sm-3}
+
+::: {.box .box-last}
+
+#### Households
+
+`r households`
+
+:::
+
+::::
+
+:::::
+
+::: {.section-heading}
+
+## Population by age cohorts
+
+:::
+
+:::: {.row}
+
+::: {.col-sm-8}
+
+```{r age, fig.height = 2.25}
+# Breakdowns:
+# 0-14; 15-24; 25-44; 45-64; 65-84, 85+
+
+age_vectors <- cancensus::child_census_vectors("v_CA16_1", keep_parent = TRUE) %>%
+  filter(str_detect(label, "to") | str_detect(label, "and over"), units == "Number") %>%
+  mutate(label_derived = str_replace(label, "years and over", "to NA years")) %>%
+  separate(label_derived, into = c("min", "max"), sep = " to ", convert = TRUE) %>%
+  mutate(
+    max = str_remove(max, " years"), max = as.numeric(max),
+    gap = max - min,
+    group = case_when(
+      min == 0 & max == 14 ~ "0 to 14",
+      min >= 15 & max <= 24 & gap == 4 ~ "15 to 24",
+      min >= 25 & max <= 44 & gap == 4 ~ "25 to 44",
+      min >= 45 & max <= 64 & gap == 4 ~ "45 to 65",
+      min >= 65 & max <= 84 & gap == 4 ~ "65 to 84",
+      min == 85 & is.na(max) ~ "85+"
+    )
+  ) %>%
+  filter(!is.na(group)) %>%
+  select(vector, group)
+
+age_vectors_data <- get_census_vectors_and_children(
+  regions = regions,
+  level = level,
+  vectors = c("v_CA16_1", age_vectors[["vector"]]),
+  quiet = TRUE
+)
+
+age_cohorts <- age_vectors_data %>%
+  filter(vector %in% c("v_CA16_1", age_vectors[["vector"]])) %>%
+  left_join(age_vectors, by = "vector") %>%
+  mutate(
+    vector_new = group, label = group, details = group, highest_parent_vector = "v_CA16_1",
+    vector = coalesce(vector_new, vector)
+  ) %>%
+  aggregate_census_vectors() %>%
+  filter(vector != highest_parent_vector)
+
+age_cohorts %>%
+  plot_census_vector()
+```
+
+:::
+
+::: {.col-sm-4}
+
+```{r}
+age_cohorts %>%
+  table_census_vector()
+```
+
+:::
+
+::::
+
+::: {.section-heading}
+
+## Households, families, education, and language
+
+:::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Private households by size
+
+:::
 
 ```{r household_size}
-data_breakdown %>%
+household_size <- data_breakdown %>%
   filter(
     vector_label_short == "household_size",
     vector != highest_parent_vector
   ) %>%
-  derive_census_vector_order() %>%
+  derive_census_vector_order()
+
+household_size %>%
   plot_census_vector()
+
+household_size %>%
+  table_census_vector()
 ```
 
-# Estimated median household income
+::::
 
-# Unaffordable housing
+:::: {.col-sm-6}
 
-```{r unaffordable_housing}
-data_breakdown %>%
-  filter(vector_label_short == "unaffordable_housing")
+::: {.section-heading}
+
+### Family type
+
+:::
+
+```{r family_type}
+family_type <- data_breakdown %>%
+  filter(
+    vector_label_short == "family_type",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order()
+
+family_type %>%
+  plot_census_vector()
+
+family_type %>%
+  table_census_vector()
 ```
 
-# Low-income measure after tax (LIM-AT)
+::::
+
+:::::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Multiple family households
+
+:::
+
+```{r household_type}
+multiple_family_households <- data_breakdown %>%
+  filter(
+    vector_label_short == "household_type",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order()
+
+multiple_family_households %>%
+  plot_census_vector()
+
+multiple_family_households %>%
+  table_census_vector()
+```
+
+::::
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Educational attainment
+
+:::
+
+```{r educational_attainment}
+educational_attainment <- data_breakdown %>%
+  filter(
+    vector_label_short == "educational_attainment",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order()
+
+educational_attainment %>%
+  plot_census_vector()
+
+educational_attainment %>%
+  table_census_vector()
+```
+
+::::
+
+:::::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Knowledge of English
+
+:::
+
+```{r knowledge_of_english}
+knowledge_of_english <- data_breakdown %>%
+  filter(
+    vector_label_short == "knowledge_of_english",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order()
+
+knowledge_of_english %>%
+  plot_census_vector()
+
+knowledge_of_english %>%
+  table_census_vector
+```
+
+::::
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Language spoken at home
+
+:::
+
+::::
+
+:::::
+
+::: {.section-heading}
+
+## Income and housing
+
+:::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Household income
+
+:::
+
+::::
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Low income
+
+:::
+
+
 ```{r lim_at}
 # TODO - needs to be divided by population
 
@@ -200,105 +506,143 @@ data_breakdown %>%
   filter(vector_label_short == "lim_at")
 ```
 
-# Visible minority population
+::::
+
+:::::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Household tenure
+
+:::
+
+```{r household_tenure}
+data_breakdown %>%
+  filter(
+    vector_label_short == "household_tenure",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
+```
+
+::::
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Shelter cost
+
+:::
+
+```{r unaffordable_housing}
+data_breakdown %>%
+  filter(vector_label_short == "unaffordable_housing")
+```
+
+::::
+
+:::::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Unaffordable housing
+
+:::
+
+::::
+
+:::::
+
+::: {.section-heading}
+
+## Diversity and immigration
+
+:::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Immigrant status
+
+:::
+
+```{r immigrant_status}
+data_breakdown %>%
+  filter(
+    vector_label_short == "immigrant_status",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
+```
+
+::::
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Aboriginal identity
+
+:::
+
+```{r aboriginal_identity}
+data_breakdown %>%
+  filter(
+    vector_label_short == "aboriginal_identity",
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order() %>%
+  plot_census_vector()
+```
+
+::::
+
+:::::
+
+::::: {.row}
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Country of origin
+
+:::
+
+::::
+
+:::: {.col-sm-6}
+
+::: {.section-heading}
+
+### Visible minority population
+
+:::
 
 ```{r visible_minority}
 data_breakdown %>%
-  filter(vector_label_short == "visible_minority",
+  filter(
+    vector_label_short == "visible_minority",
     vector != highest_parent_vector
   ) %>%
   derive_census_vector_order(TRUE) %>%
   plot_census_vector()
 ```
 
-# Household tenure
+::::
 
-```{r household_tenure}
-data_breakdown %>%
-  filter(vector_label_short == "household_tenure",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector()
-```
-
-# Average shelter cost
-
-# Age 
-
-```{r age}
-data_breakdown %>%
-  filter(vector_label_short == "age",
-    vector != highest_parent_vector
-  )
-```
-
-# Language spoken at home
-
-# Knowledge of English
-
-```{r knowledge_of_english}
-data_breakdown %>%
-  filter(vector_label_short == "knowledge_of_english",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector()
-```
-
-# Immigrant status
-
-```{r immigrant_status}
-data_breakdown %>%
-  filter(vector_label_short == "immigrant_status",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector()
-```
-
-# Aboriginal identity
-
-```{r aboriginal_identity}
-data_breakdown %>%
-  filter(vector_label_short == "aboriginal_identity",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector()
-```
-
-# Country of origin
-
-# Educational attainment
-
-```{r educational_attainment}
-data_breakdown %>%
-  filter(vector_label_short == "educational_attainment",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector()
-```
-
-# Family type
-
-```{r family_type}
-data_breakdown %>%
-  filter(vector_label_short == "family_type",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector()
-```
-
-# Multiple family households
-
-```{r household_type}
-data_breakdown %>%
-  filter(vector_label_short == "household_type",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector()
-```
+:::::

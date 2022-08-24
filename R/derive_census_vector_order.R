@@ -5,6 +5,7 @@
 #' @param data Census data, aggregated via \code{\link{aggregate_census_vectors}}
 #' @param by_value Whether the ordering is by the value (TRUE) or by the vector numbering (FALSE). Defaults to FALSE.
 #'
+#' @export
 #' @examples
 #' # TODO
 derive_census_vector_order <- function(data, by_value = FALSE) {

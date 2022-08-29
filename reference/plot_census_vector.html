@@ -44,7 +44,15 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_census_vector</span><span class="op">(</span><span class="va">data</span>, prop <span class="op">=</span> <span class="cn">TRUE</span>, width <span class="op">=</span> <span class="fl">20</span>, dollar <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_census_vector</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  prop <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  width <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  dollar <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">vector_description</span>,</span>
+<span> </span>
+<span>    aria_label <span class="op">=</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"Bar chart showing the breakdown of {vector_description}. The data is in the table that follows."</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -63,6 +71,10 @@
 
 <dt>dollar</dt>
 <dd><p>Whether the variable shown is in dollars. Defaults to FALSE.</p></dd>
+
+
+<dt>vector_description</dt>
+<dd><p>A short description of the vector, used for forming alt text for the plot.</p></dd>
 
 </dl></div>
 

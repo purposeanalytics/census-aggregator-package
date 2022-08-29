@@ -1,10 +1,13 @@
 ---
-output: html_document
+output:
+  html_document:
+    theme:
+      version: 4
 ---
 
 ```{r setup, echo = FALSE}
 knitr::opts_chunk$set(
-  echo = FALSE, message = FALSE, warning = FALSE, cache = TRUE,
+  echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE,
   out.width = "100%", fig.height = 2.25
 )
 ```
@@ -29,6 +32,30 @@ knitr::opts_chunk$set(
 }
 ```
 
+```{r html-utils}
+section_heading <- function(title) {
+  htmltools::div(
+    class = "section-heading",
+    htmltools::h1(title)
+  )
+}
+
+subsection_heading <- function(title, class = NULL) {
+  htmltools::div(
+    class = "section-heading",
+    htmltools::h2(title)
+  )
+}
+
+snapshot_card <- function(title, value, ..., class = NULL) {
+  htmltools::div(
+    class = paste("box", class),
+    htmltools::h4(title),
+    htmltools::p(value),
+    htmltools::p(...)
+  )
+}
+```
 
 ```{r packages}
 library(dplyr)
@@ -39,32 +66,33 @@ library(knitr)
 library(kableExtra)
 library(tidyr)
 library(stringr)
+library(bslib)
 ```
 
-```{r data}
+```{r data, cache = TRUE}
 regions <- list(CSD = c("3520005", "3521005", "3521010"))
 level <- "CSD"
 
 vectors <- tibble::tribble(
-    ~vector, ~vector_label, ~vector_label_short,
-    "v_CA16_401", "Population, 2016", "population_2016",
-    "v_CA16_402", "Population, 2011", "population_2011",
-    "v_CA16_407", "Land area in square kilometres", "area",
-    "v_CA16_1", "Total - Age", "age",
-    "v_CA16_418", "Private households by household size", "household_size",
-    "v_CA16_484", "Total number of census families in private households - 100% data", "family_type",
-    "v_CA16_504", "Total - Private households by household type - 100% data", "household_type",
-    "v_CA16_512", "Total - Knowledge of official languages for the total population excluding institutional residents - 100% data", "knowledge_of_english",
-    "v_CA16_1355", "Total - Language spoken most often at home for the total population excluding institutional residents - 100% data", "top_10_languages",
-    "v_CA16_2525", "In low income based on the Low-income measure, after tax (LIM-AT)", "lim_at",
-    "v_CA16_3405", "Total - Immigrant status and period of immigration for the population in private households - 25% sample data", "immigrant_status",
-    "v_CA16_3852", "Total - Aboriginal identity for the population in private households - 25% sample data", "aboriginal_identity",
-    "v_CA16_3954", "Total - Visible minority for the population in private households - 25% sample data", "visible_minority",
-    "v_CA16_3999", "Total - Ethnic origin for the population in private households - 25% sample data", "ethnic_origin",
-    "v_CA16_4836", "Total - Private households by tenure - 25% sample data", "household_tenure",
-    "v_CA16_4886", "Total -  Owner and tenant households with household total income greater than zero, in non-farm, non-reserve private dwellings by shelter-cost-to-income ratio - 25% sample data", "unaffordable_housing",
-    "v_CA16_5051", "Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data", "educational_attainment"
-  )
+  ~vector, ~vector_label, ~vector_label_short,
+  "v_CA16_401", "Population, 2016", "population_2016",
+  "v_CA16_402", "Population, 2011", "population_2011",
+  "v_CA16_407", "Land area in square kilometres", "area",
+  "v_CA16_1", "Total - Age", "age",
+  "v_CA16_418", "Private households by household size", "household_size",
+  "v_CA16_484", "Total number of census families in private households - 100% data", "family_type",
+  "v_CA16_504", "Total - Private households by household type - 100% data", "household_type",
+  "v_CA16_512", "Total - Knowledge of official languages for the total population excluding institutional residents - 100% data", "knowledge_of_english",
+  "v_CA16_1355", "Total - Language spoken most often at home for the total population excluding institutional residents - 100% data", "top_10_languages",
+  "v_CA16_2525", "In low income based on the Low-income measure, after tax (LIM-AT)", "lim_at",
+  "v_CA16_3405", "Total - Immigrant status and period of immigration for the population in private households - 25% sample data", "immigrant_status",
+  "v_CA16_3852", "Total - Aboriginal identity for the population in private households - 25% sample data", "aboriginal_identity",
+  "v_CA16_3954", "Total - Visible minority for the population in private households - 25% sample data", "visible_minority",
+  "v_CA16_3999", "Total - Ethnic origin for the population in private households - 25% sample data", "ethnic_origin",
+  "v_CA16_4836", "Total - Private households by tenure - 25% sample data", "household_tenure",
+  "v_CA16_4886", "Total -  Owner and tenant households with household total income greater than zero, in non-farm, non-reserve private dwellings by shelter-cost-to-income ratio - 25% sample data", "unaffordable_housing",
+  "v_CA16_5051", "Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data", "educational_attainment"
+)
 
 # Get data for vectors and children ----
 
@@ -76,7 +104,7 @@ data <- get_census_vectors_and_children(
 )
 ```
 
-```{r data_export}
+```{r data_export, cache = TRUE}
 # Prep data for export
 # Choose which vectors to keep within each
 
@@ -143,11 +171,9 @@ data_breakdown <- map_dfr(
   select(highest_parent_vector, vector, vector_label_short, label, value, value_proportion)
 ```
 
-::: {.section-heading}
-
-## Snapshot
-
-:::
+```{r}
+section_heading("Snapshot")
+```
 
 ::::: {.row}
 
@@ -185,8 +211,6 @@ population_density <- data %>%
   aggregate_population_density() %>%
   pull(value) %>%
   comma()
-
-population_density <- glue::glue("{population_density} people per km^2")
 #
 # summary_statistics <- tribble(
 #   ~field, ~value,
@@ -204,59 +228,41 @@ population_density <- glue::glue("{population_density} people per km^2")
 
 :::: {.col-sm-3}
 
-::: {.box}
-
-#### Population
-
-`r population`
-
-:::
+```{r population}
+snapshot_card("Population", population)
+```
 
 ::::
 
 :::: {.col-sm-3}
 
-::: {.box}
-
-#### Population change
-
-`r population_change`
-
-:::
+```{r population_change}
+snapshot_card("Population change", population_change)
+```
 
 ::::
 
 :::: {.col-sm-3}
 
-::: {.box}
-
-#### Population density
-
-`r population_density`
-
-:::
+```{r population_density}
+snapshot_card("Population density", population_density, "people per square km")
+```
 
 ::::
 
 :::: {.col-sm-3}
 
-::: {.box .box-last}
-
-#### Households
-
-`r households`
-
-:::
+```{r households}
+snapshot_card("Households", households, class = "box-last")
+```
 
 ::::
 
 :::::
 
-::: {.section-heading}
-
-## Population by age cohorts
-
-:::
+```{r}
+section_heading("Population by age cohorts")
+```
 
 :::: {.row}
 
@@ -319,21 +325,17 @@ age_cohorts %>%
 
 ::::
 
-::: {.section-heading}
-
-## Households, families, education, and language
-
-:::
+```{r}
+section_heading("Households, families, education, and language")
+```
 
 ::::: {.row}
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Private households by size
-
-:::
+```{r}
+subsection_heading("Private households by size")
+```
 
 ```{r household_size}
 household_size <- data_breakdown %>%
@@ -354,11 +356,10 @@ household_size %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
+```{r}
+subsection_heading("Family type")
+```
 
-### Family type
-
-:::
 
 ```{r family_type}
 family_type <- data_breakdown %>%
@@ -383,11 +384,9 @@ family_type %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Multiple family households
-
-:::
+```{r}
+subsection_heading("Multiple family households")
+```
 
 ```{r household_type}
 multiple_family_households <- data_breakdown %>%
@@ -408,11 +407,9 @@ multiple_family_households %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Educational attainment
-
-:::
+```{r}
+subsection_heading("Educational attainment")
+```
 
 ```{r educational_attainment}
 educational_attainment <- data_breakdown %>%
@@ -437,11 +434,9 @@ educational_attainment %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Knowledge of English
-
-:::
+```{r}
+subsection_heading("Knowledge of English")
+```
 
 ```{r knowledge_of_english}
 knowledge_of_english <- data_breakdown %>%
@@ -455,49 +450,40 @@ knowledge_of_english %>%
   plot_census_vector()
 
 knowledge_of_english %>%
-  table_census_vector
+  table_census_vector()
 ```
 
 ::::
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Language spoken at home
-
-:::
+```{r}
+subsection_heading("Language spoken at home")
+```
 
 ::::
 
 :::::
 
-::: {.section-heading}
-
-## Income and housing
-
-:::
+```{r}
+section_heading("Income and housing")
+```
 
 ::::: {.row}
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Household income
-
-:::
+```{r}
+subsection_heading("Household income")
+```
 
 ::::
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Low income
-
-:::
-
+```{r}
+subsection_heading("Low income")
+```
 
 ```{r lim_at}
 # TODO - needs to be divided by population
@@ -514,11 +500,9 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Household tenure
-
-:::
+```{r}
+subsection_heading("Household tenure")
+```
 
 ```{r household_tenure}
 data_breakdown %>%
@@ -534,11 +518,9 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Shelter cost
-
-:::
+```{r}
+subsection_heading("Shelter cost")
+```
 
 ```{r unaffordable_housing}
 data_breakdown %>%
@@ -553,31 +535,25 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Unaffordable housing
-
-:::
+```{r}
+subsection_heading("Unaffordable housing cost")
+```
 
 ::::
 
 :::::
 
-::: {.section-heading}
-
-## Diversity and immigration
-
-:::
+```{r}
+section_heading("Diversity and immigration")
+```
 
 ::::: {.row}
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Immigrant status
-
-:::
+```{r}
+subsection_heading("Immigrant status")
+```
 
 ```{r immigrant_status}
 data_breakdown %>%
@@ -593,11 +569,9 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Aboriginal identity
-
-:::
+```{r}
+subsection_heading("Aboriginal identity")
+```
 
 ```{r aboriginal_identity}
 data_breakdown %>%
@@ -617,21 +591,17 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Country of origin
-
-:::
+```{r}
+subsection_heading("Country of origin")
+```
 
 ::::
 
 :::: {.col-sm-6}
 
-::: {.section-heading}
-
-### Visible minority population
-
-:::
+```{r}
+subsection_heading("Visible minority population")
+```
 
 ```{r visible_minority}
 data_breakdown %>%

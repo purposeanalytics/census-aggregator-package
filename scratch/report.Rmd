@@ -309,7 +309,7 @@ age_cohorts <- age_vectors_data %>%
   filter(vector != highest_parent_vector)
 
 age_cohorts %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "age cohorts")
 ```
 
 :::
@@ -346,7 +346,7 @@ household_size <- data_breakdown %>%
   derive_census_vector_order()
 
 household_size %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "household size")
 
 household_size %>%
   table_census_vector()
@@ -370,7 +370,7 @@ family_type <- data_breakdown %>%
   derive_census_vector_order()
 
 family_type %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "family types")
 
 family_type %>%
   table_census_vector()
@@ -397,7 +397,7 @@ multiple_family_households <- data_breakdown %>%
   derive_census_vector_order()
 
 multiple_family_households %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "multiple family households")
 
 multiple_family_households %>%
   table_census_vector()
@@ -420,7 +420,7 @@ educational_attainment <- data_breakdown %>%
   derive_census_vector_order()
 
 educational_attainment %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "educational attainment")
 
 educational_attainment %>%
   table_census_vector()
@@ -447,7 +447,7 @@ knowledge_of_english <- data_breakdown %>%
   derive_census_vector_order()
 
 knowledge_of_english %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "knowledge of English")
 
 knowledge_of_english %>%
   table_census_vector()
@@ -511,7 +511,7 @@ data_breakdown %>%
     vector != highest_parent_vector
   ) %>%
   derive_census_vector_order() %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "household tenure")
 ```
 
 ::::
@@ -562,7 +562,7 @@ data_breakdown %>%
     vector != highest_parent_vector
   ) %>%
   derive_census_vector_order() %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "immigrant status")
 ```
 
 ::::
@@ -580,7 +580,7 @@ data_breakdown %>%
     vector != highest_parent_vector
   ) %>%
   derive_census_vector_order() %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "Aboriginal identity")
 ```
 
 ::::
@@ -610,7 +610,7 @@ data_breakdown %>%
     vector != highest_parent_vector
   ) %>%
   derive_census_vector_order(TRUE) %>%
-  plot_census_vector()
+  plot_census_vector(vector_description = "visible minority population")
 ```
 
 ::::

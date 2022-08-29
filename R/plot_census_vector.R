@@ -67,12 +67,13 @@ plot_census_vector_static <- function(data, prop = TRUE, width = 20, dollar = FA
 #' @param prop Whether the vector to be displayed is a proportion. Defaults to TRUE.
 #' @param width Passed along to str_wrap for wrapping y-axis labels. Defaults to a width of 20.
 #' @param dollar Whether the variable shown is in dollars. Defaults to FALSE.
+#' @param vector_description A short description of the vector, used for forming alt text for the plot.
 #'
 #' @export
 #'
 #' @examples
 #' # TODO
-plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE) {
+plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE, vector_description, aria_label = glue::glue("Bar chart showing the breakdown of {vector_description}. The data is in the table that follows.")) {
 
   # Select value_proportion if prop = TRUE
 
@@ -135,7 +136,11 @@ plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE) {
     ) %>%
     plotly::config(displayModeBar = FALSE)
 
-  p
+  htmltools::div(
+    role = "img",
+    `aria-label` = aria_label,
+    p
+  )
 }
 
 str_wrap_factor <- function(x, width) {

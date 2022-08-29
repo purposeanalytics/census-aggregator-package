@@ -4,7 +4,15 @@
 \alias{plot_census_vector}
 \title{Plot a neighbourhood profile variable, for web}
 \usage{
-plot_census_vector(data, prop = TRUE, width = 20, dollar = FALSE)
+plot_census_vector(
+  data,
+  prop = TRUE,
+  width = 20,
+  dollar = FALSE,
+  vector_description,
+ 
+    aria_label = glue::glue("Bar chart showing the breakdown of {vector_description}. The data is in the table that follows.")
+)
 }
 \arguments{
 \item{data}{Census data, aggregated via \code{\link{aggregate_census_vectors}}}
@@ -14,6 +22,8 @@ plot_census_vector(data, prop = TRUE, width = 20, dollar = FALSE)
 \item{width}{Passed along to str_wrap for wrapping y-axis labels. Defaults to a width of 20.}
 
 \item{dollar}{Whether the variable shown is in dollars. Defaults to FALSE.}
+
+\item{vector_description}{A short description of the vector, used for forming alt text for the plot.}
 }
 \description{
 Plot a neighbourhood profile variable, for web

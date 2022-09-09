@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{css}
+```{css css-styles}
 .section-heading {
   background-color: lightgrey;
   padding-left: 5px;
@@ -121,7 +121,7 @@ data_breakdown <- vectors_data_filtered %>%
   ungroup()
 ```
 
-```{r}
+```{r snapshot_heading}
 section_heading("Snapshot")
 ```
 
@@ -197,7 +197,7 @@ snapshot_card("Households", households, class = "box-last")
 
 :::::
 
-```{r}
+```{r age-cohorts-heading}
 section_heading("Population by age cohorts")
 ```
 
@@ -255,7 +255,7 @@ age_cohorts %>%
 
 ::: {.col-sm-4}
 
-```{r, eval = FALSE}
+```{r age-cohorts-table, eval = FALSE}
 age_cohorts %>%
   table_census_vector()
 ```
@@ -264,7 +264,7 @@ age_cohorts %>%
 
 ::::
 
-```{r}
+```{r households-families-education-language-heading}
 section_heading("Households, families, education, and language")
 ```
 
@@ -272,7 +272,7 @@ section_heading("Households, families, education, and language")
 
 :::: {.col-sm-6}
 
-```{r}
+```{r households-heading}
 subsection_heading("Private households by size")
 ```
 
@@ -295,7 +295,7 @@ household_size %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-family-type}
 subsection_heading("Family type")
 ```
 
@@ -323,7 +323,7 @@ family_type %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-multiple-family}
 subsection_heading("Multiple family households")
 ```
 
@@ -346,7 +346,7 @@ multiple_family_households %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-educational-attainment}
 subsection_heading("Educational attainment")
 ```
 
@@ -373,7 +373,7 @@ educational_attainment %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-knowledge-of-english}
 subsection_heading("Knowledge of English")
 ```
 
@@ -396,7 +396,7 @@ knowledge_of_english %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-laguage-at-home}
 subsection_heading("Language spoken at home")
 ```
 
@@ -419,7 +419,7 @@ language_at_home %>%
 
 :::::
 
-```{r}
+```{r section-income-housing}
 section_heading("Income and housing")
 ```
 
@@ -427,7 +427,7 @@ section_heading("Income and housing")
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-household-income}
 subsection_heading("Household income")
 ```
 
@@ -435,7 +435,7 @@ subsection_heading("Household income")
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-low-income}
 subsection_heading("Low income")
 ```
 
@@ -454,11 +454,11 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-household-tenure}
 subsection_heading("Household tenure")
 ```
 
-```{r household_tenure}
+```{r household-tenure}
 data_breakdown %>%
   filter(
     vector_label_short == "household_tenure",
@@ -472,11 +472,11 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-shelter-cost}
 subsection_heading("Shelter cost")
 ```
 
-```{r unaffordable_housing}
+```{r unafforable-housing}
 data_breakdown %>%
   filter(vector_label_short == "unaffordable_housing")
 ```
@@ -489,7 +489,7 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-unaffordable-housing}
 subsection_heading("Unaffordable housing cost")
 ```
 
@@ -497,7 +497,7 @@ subsection_heading("Unaffordable housing cost")
 
 :::::
 
-```{r}
+```{r section-diversity-immigration}
 section_heading("Diversity and immigration")
 ```
 
@@ -505,11 +505,11 @@ section_heading("Diversity and immigration")
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-immigrant-status}
 subsection_heading("Immigrant status")
 ```
 
-```{r immigrant_status}
+```{r immigrant-status}
 data_breakdown %>%
   filter(
     vector_label_short == "immigrant_status",
@@ -523,11 +523,11 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-aboriginal-identity}
 subsection_heading("Aboriginal identity")
 ```
 
-```{r aboriginal_identity}
+```{r aboriginal-identity}
 data_breakdown %>%
   filter(
     vector_label_short == "aboriginal_identity",
@@ -545,7 +545,7 @@ data_breakdown %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-country-of-origin}
 subsection_heading("Country of origin")
 ```
 
@@ -568,7 +568,7 @@ ethnic_origin %>%
 
 :::: {.col-sm-6}
 
-```{r}
+```{r subsection-visible-minority}
 subsection_heading("Visible minority population")
 ```
 

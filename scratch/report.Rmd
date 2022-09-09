@@ -75,6 +75,8 @@ library(stringr)
 library(bslib)
 library(arrow)
 library(censusaggregatorapp)
+library(sfarrow)
+library(tmap)
 ```
 
 ```{r data}
@@ -120,6 +122,19 @@ data_breakdown <- vectors_data_filtered %>%
   tidyr::fill(vector_label_short, .direction = "updown") %>%
   ungroup()
 ```
+
+```{r map, fig.height = 5, dpi = 300}
+boundaries_dataset <- glue::glue("extdata/{level}")
+
+boundaries_data <- open_dataset(system.file(boundaries_dataset, package = "censusaggregatorapp"))
+boundaries_data <- boundaries_data %>%
+  filter(geo_uid %in% regions) %>%
+  read_sf_dataset()
+
+tm_shape(boundaries_data) + 
+  tm_polygons(col = "white")
+```
+
 
 ```{r snapshot_heading}
 section_heading("Snapshot")

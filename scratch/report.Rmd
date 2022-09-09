@@ -3,6 +3,12 @@ output:
   html_document:
     theme:
       version: 4
+params:
+  geo_uid: !r c("5915015", "5915022", "5915025", "5915029", "5915043", "5915011", "5915802", "5915810", "5915004", "5915804", "5915039", "5915034")
+  level: "csd"
+# params:
+#   geo_uid: !r c("6020500.02", "6020100.02")
+#   level: "ct"
 ---
 
 ```{r setup, echo = FALSE}
@@ -67,108 +73,52 @@ library(kableExtra)
 library(tidyr)
 library(stringr)
 library(bslib)
+library(arrow)
+library(censusaggregatorapp)
 ```
 
-```{r data, cache = TRUE}
-regions <- list(CSD = c("3520005", "3521005", "3521010"))
-level <- "CSD"
+```{r data}
+regions <- params$geo_uid
+level <- params$level
+dataset <- glue::glue("extdata/{level}_values")
 
-vectors <- tibble::tribble(
-  ~vector, ~vector_label, ~vector_label_short,
-  "v_CA16_401", "Population, 2016", "population_2016",
-  "v_CA16_402", "Population, 2011", "population_2011",
-  "v_CA16_407", "Land area in square kilometres", "area",
-  "v_CA16_1", "Total - Age", "age",
-  "v_CA16_418", "Private households by household size", "household_size",
-  "v_CA16_484", "Total number of census families in private households - 100% data", "family_type",
-  "v_CA16_504", "Total - Private households by household type - 100% data", "household_type",
-  "v_CA16_512", "Total - Knowledge of official languages for the total population excluding institutional residents - 100% data", "knowledge_of_english",
-  "v_CA16_1355", "Total - Language spoken most often at home for the total population excluding institutional residents - 100% data", "top_10_languages",
-  "v_CA16_2525", "In low income based on the Low-income measure, after tax (LIM-AT)", "lim_at",
-  "v_CA16_3405", "Total - Immigrant status and period of immigration for the population in private households - 25% sample data", "immigrant_status",
-  "v_CA16_3852", "Total - Aboriginal identity for the population in private households - 25% sample data", "aboriginal_identity",
-  "v_CA16_3954", "Total - Visible minority for the population in private households - 25% sample data", "visible_minority",
-  "v_CA16_3999", "Total - Ethnic origin for the population in private households - 25% sample data", "ethnic_origin",
-  "v_CA16_4836", "Total - Private households by tenure - 25% sample data", "household_tenure",
-  "v_CA16_4886", "Total -  Owner and tenant households with household total income greater than zero, in non-farm, non-reserve private dwellings by shelter-cost-to-income ratio - 25% sample data", "unaffordable_housing",
-  "v_CA16_5051", "Total - Highest certificate, diploma or degree for the population aged 15 years and over in private households - 25% sample data", "educational_attainment"
-)
+data <- open_dataset(system.file(dataset, package = "censusaggregatorapp"))
 
-# Get data for vectors and children ----
+vectors_data <- data %>%
+  filter(geo_uid %in% regions) %>%
+  select(-id) %>%
+  collect()
 
-data <- get_census_vectors_and_children(
-  regions = regions,
-  level = level,
-  vectors = vectors[["vector"]],
-  quiet = TRUE
-)
-```
+vectors_data <- vectors_data %>%
+  mutate(geo_uid = forcats::fct_expand(geo_uid, regions))
 
-```{r data_export, cache = TRUE}
-# Prep data for export
-# Choose which vectors to keep within each
+metadata <- switch(level,
+  "csd" = csd,
+  "ct" = ct
+) %>%
+  filter(geo_uid %in% regions)
 
-breakdown_vectors <- list(
-  "v_CA16_401" = NA,
-  "v_CA16_418" = c("v_CA16_419", "v_CA16_420", "v_CA16_421", "v_CA16_422", "v_CA16_423"),
-  "v_CA16_3954" = c(
-    "v_CA16_3957", "v_CA16_3960", "v_CA16_3963", "v_CA16_3966",
-    "v_CA16_3969", "v_CA16_3972", "v_CA16_3975", "v_CA16_3978", "v_CA16_3981",
-    "v_CA16_3984", "v_CA16_3987", "v_CA16_3990", "v_CA16_3993",
-    "v_CA16_3996"
-  ),
-  "v_CA16_4836" = c("v_CA16_4837", "v_CA16_4838", "v_CA16_4839"),
-  "v_CA16_4886" = "v_CA16_4888",
-  "v_CA16_1" = c(
-    # 5 year breakdown
-    "v_CA16_7", "v_CA16_25", "v_CA16_43", "v_CA16_64", "v_CA16_82",
-    "v_CA16_100", "v_CA16_118", "v_CA16_136", "v_CA16_154", "v_CA16_172",
-    "v_CA16_190", "v_CA16_208", "v_CA16_226", "v_CA16_247", "v_CA16_265",
-    "v_CA16_283", "v_CA16_301", "v_CA16_322", "v_CA16_340", "v_CA16_358", "v_CA16_376"
-  ),
-  "v_CA16_512" = c("v_CA16_515", "v_CA16_521"),
-  "v_CA16_3405" = c("v_CA16_3411", "v_CA16_3432"),
-  "v_CA16_3852" = c("v_CA16_3855"),
-  "v_CA16_5051" = c("v_CA16_5054", "v_CA16_5057", "v_CA16_5060"),
-  "v_CA16_484" = c("v_CA16_485", "v_CA16_488", "v_CA16_489"),
-  "v_CA16_504" = c("v_CA16_505", "v_CA16_508", "v_CA16_509")
-)
+vectors_data <- vectors_data %>%
+  tidyr::complete(vector, geo_uid, fill = list(value = 0)) %>%
+  left_join(metadata, by = "geo_uid")
 
-filter_breakdown_vectors <- function(data, vector) {
-  vector_breakdown_vectors <- breakdown_vectors[[vector]]
-
-  if (!all(is.na(vector_breakdown_vectors))) {
-    data <- data %>%
-      filter(
-        vector %in% c(vector_breakdown_vectors, !!vector)
-      )
-  } else {
-    data <- data %>%
-      filter(
-        vector == !!vector
-      )
-  }
-
-  data
-}
+vectors_data <- vectors_data %>%
+  left_join(censusaggregatorapp::vectors, by = "vector") %>%
+  derive_aggregation_type()
 
 # Aggregate vectors - treat v_CA16_407 (land area) separately, since it will be used for population density, and v_CA16_402 (population 2011) separately, since it will be used for population change
 
-vectors <- vectors %>%
+vectors_data_filtered <- vectors_data %>%
   filter(!(vector %in% c("v_CA16_407", "v_CA16_402")))
 
-data_breakdown <- map_dfr(
-  vectors[["vector"]],
-  function(vector) {
-    data %>%
-      filter_breakdown_vectors(vector) %>%
-      aggregate_census_vectors()
-  }
-) %>%
-  select(highest_parent_vector, vector, label, value, value_proportion) %>%
+data_breakdown <- vectors_data_filtered %>%
+  aggregate_census_vectors() %>%
   distinct() %>%
-  left_join(vectors, by = c("highest_parent_vector" = "vector")) %>%
-  select(highest_parent_vector, vector, vector_label_short, label, value, value_proportion)
+  left_join(censusaggregatorapp::vectors, by = c("highest_parent_vector", "vector", "type", "label", "units", "parent_vector", "aggregation", "details")) %>%
+  select(highest_parent_vector, vector, label, vector_label_short, value, value_proportion) %>%
+  group_by(highest_parent_vector) %>%
+  tidyr::fill(vector_label_short, .direction = "updown") %>%
+  ungroup()
 ```
 
 ```{r}
@@ -194,36 +144,23 @@ population <- data_breakdown %>%
   pull(value) %>%
   comma()
 
-households <- data %>%
+households <- metadata %>%
   select(geo_uid, households) %>%
   distinct() %>%
   summarise(across(households, sum, na.rm = TRUE)) %>%
   pull(households) %>%
   comma()
 
-population_change <- data %>%
+population_change <- vectors_data %>%
   aggregate_population_change() %>%
   pull(value) %>%
   percent(accuracy = 0.1)
 
-population_density <- data %>%
+population_density <- vectors_data %>%
   filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
   aggregate_population_density() %>%
   pull(value) %>%
   comma()
-#
-# summary_statistics <- tribble(
-#   ~field, ~value,
-#   "Areas selected", areas_selected,
-#   "Population", population,
-#   "Households", households,
-#   "Population change (2011 to 2016)", population_change,
-#   "Population density", population_density
-# ) %>%
-#   mutate(field = glue::glue("{field}:"))
-#
-# kable(summary_statistics, align = "lr", col.names = c("", "")) %>%
-#   kableExtra::column_spec(column = 1, bold = TRUE)
 ```
 
 :::: {.col-sm-3}
@@ -268,9 +205,11 @@ section_heading("Population by age cohorts")
 
 ::: {.col-sm-8}
 
-```{r age, fig.height = 2.25}
+```{r age, fig.height = 2.25, eval = FALSE}
 # Breakdowns:
 # 0-14; 15-24; 25-44; 45-64; 65-84, 85+
+
+# TODO
 
 age_vectors <- cancensus::child_census_vectors("v_CA16_1", keep_parent = TRUE) %>%
   filter(str_detect(label, "to") | str_detect(label, "and over"), units == "Number") %>%
@@ -316,7 +255,7 @@ age_cohorts %>%
 
 ::: {.col-sm-4}
 
-```{r}
+```{r, eval = FALSE}
 age_cohorts %>%
   table_census_vector()
 ```
@@ -461,6 +400,21 @@ knowledge_of_english %>%
 subsection_heading("Language spoken at home")
 ```
 
+```{r language_at_home}
+language_at_home <- data_breakdown %>% 
+  filter(vector_label_short == "top_10_languages") %>% 
+  filter(vector != highest_parent_vector) %>%
+  top_n(10, wt = value) %>%
+  arrange(-value) %>%
+  derive_census_vector_order(by_value = TRUE)
+
+language_at_home %>%
+  plot_census_vector(vector_description = "top 10 languages spoken at home")
+
+language_at_home %>%
+  table_census_vector()
+```
+
 ::::
 
 :::::
@@ -595,6 +549,21 @@ data_breakdown %>%
 subsection_heading("Country of origin")
 ```
 
+```{r ethnic_origin}
+ethnic_origin <- data_breakdown %>% 
+  filter(vector_label_short == "ethnic_origin") %>% 
+  filter(vector != highest_parent_vector) %>%
+  top_n(10, wt = value) %>%
+  arrange(-value) %>%
+  derive_census_vector_order(by_value = TRUE)
+
+ethnic_origin %>%
+  plot_census_vector(vector_description = "ethnic_origin")
+
+ethnic_origin %>%
+  table_census_vector()
+```
+
 ::::
 
 :::: {.col-sm-6}
@@ -604,13 +573,20 @@ subsection_heading("Visible minority population")
 ```
 
 ```{r visible_minority}
-data_breakdown %>%
+visible_minority <- data_breakdown %>%
   filter(
     vector_label_short == "visible_minority",
     vector != highest_parent_vector
   ) %>%
   derive_census_vector_order(TRUE) %>%
+  # Put "not a visible minority" last
+  mutate(label = forcats::fct_relevel(label, "Not a visible minority", after = Inf))
+
+visible_minority %>%
   plot_census_vector(vector_description = "visible minority population")
+
+visible_minority %>%
+  table_census_vector()
 ```
 
 ::::

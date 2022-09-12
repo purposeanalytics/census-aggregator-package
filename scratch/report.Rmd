@@ -4,7 +4,7 @@ output:
     theme:
       version: 4
 params:
-  geo_uid: !r c("5915015", "5915022", "5915025", "5915029", "5915043", "5915011", "5915802", "5915810", "5915004", "5915804", "5915039", "5915034")
+  geo_uid: !r c("2423802")
   level: "csd"
 # params:
 #   geo_uid: !r c("6020500.02", "6020100.02")
@@ -38,6 +38,22 @@ knitr::opts_chunk$set(
 }
 ```
 
+```{r packages}
+library(dplyr)
+library(censusaggregate)
+library(purrr)
+library(scales)
+library(knitr)
+library(kableExtra)
+library(tidyr)
+library(stringr)
+library(bslib)
+library(arrow)
+library(censusaggregatorapp)
+library(sfarrow)
+library(tmap)
+```
+
 ```{r html-utils}
 section_heading <- function(title) {
   htmltools::div(
@@ -63,22 +79,6 @@ snapshot_card <- function(title, value, ..., class = NULL) {
 }
 ```
 
-```{r packages}
-library(dplyr)
-library(censusaggregate)
-library(purrr)
-library(scales)
-library(knitr)
-library(kableExtra)
-library(tidyr)
-library(stringr)
-library(bslib)
-library(arrow)
-library(censusaggregatorapp)
-library(sfarrow)
-library(tmap)
-```
-
 ```{r data}
 regions <- params$geo_uid
 level <- params$level
@@ -101,14 +101,36 @@ metadata <- switch(level,
   filter(geo_uid %in% regions)
 
 vectors_data <- vectors_data %>%
-  tidyr::complete(vector, geo_uid, fill = list(value = 0)) %>%
+  # tidyr::complete(vector, geo_uid, fill = list(value = 0)) %>%
   left_join(metadata, by = "geo_uid")
+
+age_cohorts_update <- tidyr::crossing(vector = c("0 to 14", "15 to 24", "25 to 44", "45 to 65", "65 to 84", "85+"), geo_uid = regions) %>%
+  mutate(
+    highest_parent_vector = "v_CA16_1",
+    units = "Number",
+    aggregation = "Additive",
+    vector_label_short = "age_cohorts",
+    label = vector
+  ) %>% 
+  left_join(vectors_data %>% select(geo_uid, vector, value), by = c("vector", "geo_uid"))
 
 vectors_data <- vectors_data %>%
   left_join(censusaggregatorapp::vectors, by = "vector") %>%
+  anti_join(age_cohorts_update, by = c("vector", "geo_uid"))
+
+vectors_data <- vectors_data %>%
+  bind_rows(age_cohorts_update)
+
+vectors_data <- vectors_data %>%
   derive_aggregation_type()
 
 # Aggregate vectors - treat v_CA16_407 (land area) separately, since it will be used for population density, and v_CA16_402 (population 2011) separately, since it will be used for population change
+vectors_metadata <- censusaggregatorapp::vectors %>%
+  bind_rows(
+    age_cohorts_update %>%
+      select(-geo_uid, -value) %>%
+      distinct()
+  )
 
 vectors_data_filtered <- vectors_data %>%
   filter(!(vector %in% c("v_CA16_407", "v_CA16_402")))
@@ -116,7 +138,7 @@ vectors_data_filtered <- vectors_data %>%
 data_breakdown <- vectors_data_filtered %>%
   aggregate_census_vectors() %>%
   distinct() %>%
-  left_join(censusaggregatorapp::vectors, by = c("highest_parent_vector", "vector", "type", "label", "units", "parent_vector", "aggregation", "details")) %>%
+  left_join(vectors_metadata, by = c("highest_parent_vector", "vector", "type", "label", "units", "parent_vector", "aggregation", "details")) %>%
   select(highest_parent_vector, vector, label, vector_label_short, value, value_proportion) %>%
   group_by(highest_parent_vector) %>%
   tidyr::fill(vector_label_short, .direction = "updown") %>%
@@ -131,7 +153,7 @@ boundaries_data <- boundaries_data %>%
   filter(geo_uid %in% regions) %>%
   read_sf_dataset()
 
-tm_shape(boundaries_data) + 
+tm_shape(boundaries_data) +
   tm_polygons(col = "white")
 ```
 
@@ -168,8 +190,14 @@ households <- metadata %>%
 
 population_change <- vectors_data %>%
   aggregate_population_change() %>%
-  pull(value) %>%
-  percent(accuracy = 0.1)
+  pull(value)
+
+if (!is.na(population_change)) {
+  population_change <- population_change %>%
+    percent(accuracy = 0.1)
+} else {
+  population_change <- "---"
+}
 
 population_density <- vectors_data %>%
   filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
@@ -220,47 +248,13 @@ section_heading("Population by age cohorts")
 
 ::: {.col-sm-8}
 
-```{r age, fig.height = 2.25, eval = FALSE}
-# Breakdowns:
-# 0-14; 15-24; 25-44; 45-64; 65-84, 85+
-
-# TODO
-
-age_vectors <- cancensus::child_census_vectors("v_CA16_1", keep_parent = TRUE) %>%
-  filter(str_detect(label, "to") | str_detect(label, "and over"), units == "Number") %>%
-  mutate(label_derived = str_replace(label, "years and over", "to NA years")) %>%
-  separate(label_derived, into = c("min", "max"), sep = " to ", convert = TRUE) %>%
-  mutate(
-    max = str_remove(max, " years"), max = as.numeric(max),
-    gap = max - min,
-    group = case_when(
-      min == 0 & max == 14 ~ "0 to 14",
-      min >= 15 & max <= 24 & gap == 4 ~ "15 to 24",
-      min >= 25 & max <= 44 & gap == 4 ~ "25 to 44",
-      min >= 45 & max <= 64 & gap == 4 ~ "45 to 65",
-      min >= 65 & max <= 84 & gap == 4 ~ "65 to 84",
-      min == 85 & is.na(max) ~ "85+"
-    )
+```{r age-cohorts, fig.height = 2.25}
+age_cohorts <- data_breakdown %>%
+  filter(
+    vector_label_short == "age_cohorts",
+    vector != highest_parent_vector
   ) %>%
-  filter(!is.na(group)) %>%
-  select(vector, group)
-
-age_vectors_data <- get_census_vectors_and_children(
-  regions = regions,
-  level = level,
-  vectors = c("v_CA16_1", age_vectors[["vector"]]),
-  quiet = TRUE
-)
-
-age_cohorts <- age_vectors_data %>%
-  filter(vector %in% c("v_CA16_1", age_vectors[["vector"]])) %>%
-  left_join(age_vectors, by = "vector") %>%
-  mutate(
-    vector_new = group, label = group, details = group, highest_parent_vector = "v_CA16_1",
-    vector = coalesce(vector_new, vector)
-  ) %>%
-  aggregate_census_vectors() %>%
-  filter(vector != highest_parent_vector)
+  mutate(label = forcats::fct_reorder(label, label))
 
 age_cohorts %>%
   plot_census_vector(vector_description = "age cohorts")
@@ -270,7 +264,7 @@ age_cohorts %>%
 
 ::: {.col-sm-4}
 
-```{r age-cohorts-table, eval = FALSE}
+```{r age-cohorts-table}
 age_cohorts %>%
   table_census_vector()
 ```
@@ -416,8 +410,8 @@ subsection_heading("Language spoken at home")
 ```
 
 ```{r language_at_home}
-language_at_home <- data_breakdown %>% 
-  filter(vector_label_short == "top_10_languages") %>% 
+language_at_home <- data_breakdown %>%
+  filter(vector_label_short == "top_10_languages") %>%
   filter(vector != highest_parent_vector) %>%
   top_n(10, wt = value) %>%
   arrange(-value) %>%
@@ -565,8 +559,8 @@ subsection_heading("Country of origin")
 ```
 
 ```{r ethnic_origin}
-ethnic_origin <- data_breakdown %>% 
-  filter(vector_label_short == "ethnic_origin") %>% 
+ethnic_origin <- data_breakdown %>%
+  filter(vector_label_short == "ethnic_origin") %>%
   filter(vector != highest_parent_vector) %>%
   top_n(10, wt = value) %>%
   arrange(-value) %>%

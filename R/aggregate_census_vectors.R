@@ -103,7 +103,7 @@ aggregate_number_additive <- function(data) {
       .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
     ) %>%
     dplyr::summarise(
-      value = sum(.data$value, na.rm = TRUE),
+      value = sum(.data$value),
       .groups = "drop"
     )
 

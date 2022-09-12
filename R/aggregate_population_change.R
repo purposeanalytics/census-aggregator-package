@@ -43,6 +43,14 @@ aggregate_population_change <- function(data) {
   population_data_max <- population_data %>%
     dplyr::filter(.data$population_year != min(.data$population_year))
 
+  # If either are NA, return NA
+
+  if (is.na(population_data_min[["value"]]) | is.na(population_data_max[["value"]])) {
+    return(
+      tibble::tibble(value = NA)
+    )
+  }
+
   # Calculate the change
   population_data_min %>%
     dplyr::left_join(population_data_max, by = c("type", "units", "aggregation", "aggregation_type"), suffix = c("_min", "_max")) %>%

@@ -24,6 +24,8 @@ plot_census_vector(
 \item{dollar}{Whether the variable shown is in dollars. Defaults to FALSE.}
 
 \item{vector_description}{A short description of the vector, used for forming alt text for the plot.}
+
+\item{aria_label}{Aria label / alt text for the plot. Defaults to use \code{vector_description}: "Bar chart showing the breakdown of \code{vector_description}. The data is in the table that follows.", but can be overridden.}
 }
 \description{
 Plot a neighbourhood profile variable, for web

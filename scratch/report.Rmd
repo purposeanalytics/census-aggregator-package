@@ -14,7 +14,7 @@ params:
 ```{r setup, echo = FALSE}
 knitr::opts_chunk$set(
   echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE,
-  out.width = "100%", fig.height = 2.25
+  out.width = "100%", fig.height = 2
 )
 ```
 
@@ -25,33 +25,25 @@ knitr::opts_chunk$set(
 }
 
 .box {
-  height: 100px;
+  height: 100%;
   background-color: lightgrey;
-  text-align: center;
-  padding: 10px;
-  margin-right: 2px;
+  # text-align: center;
+  padding: 0.5rem;
+  # margin-right: 0.5rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .box-last {
-  margin-right: 0;
-  margin-left: 2px;
+  # margin-right: 0;
+  # margin-left: 0.5rem;
 }
-```
 
-```{r packages}
-library(dplyr)
-library(censusaggregate)
-library(purrr)
-library(scales)
-library(knitr)
-library(kableExtra)
-library(tidyr)
-library(stringr)
-library(bslib)
-library(arrow)
-library(censusaggregatorapp)
-library(sfarrow)
-library(tmap)
+.card-value {
+  margin-top: auto;
+  font-size: 2rem;
+  font-weight: bold;
+}
 ```
 
 ```{r html-utils}
@@ -69,14 +61,45 @@ subsection_heading <- function(title, class = NULL) {
   )
 }
 
+snapshot_card_value <- function(value) {
+  htmltools::div(
+    class = "card-value",
+    value
+  )
+}
+
 snapshot_card <- function(title, value, ..., class = NULL) {
   htmltools::div(
     class = paste("box", class),
-    htmltools::h4(title),
-    htmltools::p(value),
-    htmltools::p(...)
+    htmltools::div(htmltools::HTML(title)),
+    snapshot_card_value(value),
+    htmltools::div(...)
   )
 }
+
+plot_table_row <- function(header, plot, table) {
+  shiny::fluidRow(
+    shiny::column(width = 12, header),
+    shiny::column(width = 6, plot),
+    shiny::column(width = 6, htmltools::HTML(table)),
+  )
+}
+```
+
+```{r packages}
+library(dplyr)
+library(censusaggregate)
+library(purrr)
+library(scales)
+library(knitr)
+library(kableExtra)
+library(tidyr)
+library(stringr)
+library(bslib)
+library(arrow)
+library(censusaggregatorapp)
+library(sfarrow)
+# library(tmap)
 ```
 
 ```{r data}
@@ -111,7 +134,7 @@ age_cohorts_update <- tidyr::crossing(vector = c("0 to 14", "15 to 24", "25 to 4
     aggregation = "Additive",
     vector_label_short = "age_cohorts",
     label = vector
-  ) %>% 
+  ) %>%
   left_join(vectors_data %>% select(geo_uid, vector, value), by = c("vector", "geo_uid"))
 
 vectors_data <- vectors_data %>%
@@ -145,7 +168,7 @@ data_breakdown <- vectors_data_filtered %>%
   ungroup()
 ```
 
-```{r map, fig.height = 5, dpi = 300}
+```{r map, fig.height = 5, dpi = 300, eval = FALSE}
 boundaries_dataset <- glue::glue("extdata/{level}")
 
 boundaries_data <- open_dataset(system.file(boundaries_dataset, package = "censusaggregatorapp"))
@@ -162,7 +185,7 @@ tm_shape(boundaries_data) +
 section_heading("Snapshot")
 ```
 
-::::: {.row}
+::::: {.row .mb-2}
 
 ```{r snapshot}
 # Number of geographies (CSDs/CTs), population, number of households, population change (2011 to 2016), population density
@@ -196,7 +219,7 @@ if (!is.na(population_change)) {
   population_change <- population_change %>%
     percent(accuracy = 0.1)
 } else {
-  population_change <- "---"
+  population_change <- htmltools::HTML("&#8212;")
 }
 
 population_density <- vectors_data %>%
@@ -217,7 +240,7 @@ snapshot_card("Population", population)
 :::: {.col-sm-3}
 
 ```{r population_change}
-snapshot_card("Population change", population_change)
+snapshot_card("Population change<br>(2011 to 2016)", population_change)
 ```
 
 ::::
@@ -225,7 +248,7 @@ snapshot_card("Population change", population_change)
 :::: {.col-sm-3}
 
 ```{r population_density}
-snapshot_card("Population density", population_density, "people per square km")
+snapshot_card("Population density<br>(people per square km)", population_density)
 ```
 
 ::::
@@ -248,7 +271,7 @@ section_heading("Population by age cohorts")
 
 ::: {.col-sm-8}
 
-```{r age-cohorts, fig.height = 2.25}
+```{r age-cohorts, out.height = 1}
 age_cohorts <- data_breakdown %>%
   filter(
     vector_label_short == "age_cohorts",
@@ -277,14 +300,6 @@ age_cohorts %>%
 section_heading("Households, families, education, and language")
 ```
 
-::::: {.row}
-
-:::: {.col-sm-6}
-
-```{r households-heading}
-subsection_heading("Private households by size")
-```
-
 ```{r household_size}
 household_size <- data_breakdown %>%
   filter(
@@ -293,21 +308,14 @@ household_size <- data_breakdown %>%
   ) %>%
   derive_census_vector_order()
 
-household_size %>%
-  plot_census_vector(vector_description = "household size")
-
-household_size %>%
-  table_census_vector()
+plot_table_row(
+  subsection_heading("Private households by size"),
+  household_size %>%
+    plot_census_vector(vector_description = "household size"),
+  household_size %>%
+    table_census_vector()
+)
 ```
-
-::::
-
-:::: {.col-sm-6}
-
-```{r subsection-family-type}
-subsection_heading("Family type")
-```
-
 
 ```{r family_type}
 family_type <- data_breakdown %>%
@@ -317,23 +325,13 @@ family_type <- data_breakdown %>%
   ) %>%
   derive_census_vector_order()
 
-family_type %>%
-  plot_census_vector(vector_description = "family types")
-
-family_type %>%
-  table_census_vector()
-```
-
-::::
-
-:::::
-
-::::: {.row}
-
-:::: {.col-sm-6}
-
-```{r subsection-multiple-family}
-subsection_heading("Multiple family households")
+plot_table_row(
+  subsection_heading("Family type"),
+  family_type %>%
+    plot_census_vector(vector_description = "family types"),
+  family_type %>%
+    table_census_vector()
+)
 ```
 
 ```{r household_type}
@@ -344,19 +342,13 @@ multiple_family_households <- data_breakdown %>%
   ) %>%
   derive_census_vector_order()
 
-multiple_family_households %>%
-  plot_census_vector(vector_description = "multiple family households")
-
-multiple_family_households %>%
-  table_census_vector()
-```
-
-::::
-
-:::: {.col-sm-6}
-
-```{r subsection-educational-attainment}
-subsection_heading("Educational attainment")
+plot_table_row(
+  subsection_heading("Multiple family households"),
+  multiple_family_households %>%
+    plot_census_vector(vector_description = "multiple family households"),
+  multiple_family_households %>%
+    table_census_vector()
+)
 ```
 
 ```{r educational_attainment}
@@ -367,20 +359,14 @@ educational_attainment <- data_breakdown %>%
   ) %>%
   derive_census_vector_order()
 
-educational_attainment %>%
-  plot_census_vector(vector_description = "educational attainment")
-
-educational_attainment %>%
-  table_census_vector()
+plot_table_row(
+  subsection_heading("Educational attainment"),
+  multiple_family_households %>%
+    plot_census_vector(vector_description = "multiple family households"),
+  multiple_family_households %>%
+    table_census_vector()
+)
 ```
-
-::::
-
-:::::
-
-::::: {.row}
-
-:::: {.col-sm-6}
 
 ```{r subsection-knowledge-of-english}
 subsection_heading("Knowledge of English")
@@ -402,13 +388,6 @@ knowledge_of_english %>%
 ```
 
 ::::
-
-:::: {.col-sm-6}
-
-```{r subsection-laguage-at-home}
-subsection_heading("Language spoken at home")
-```
-
 ```{r language_at_home}
 language_at_home <- data_breakdown %>%
   filter(vector_label_short == "top_10_languages") %>%
@@ -417,14 +396,14 @@ language_at_home <- data_breakdown %>%
   arrange(-value) %>%
   derive_census_vector_order(by_value = TRUE)
 
-language_at_home %>%
-  plot_census_vector(vector_description = "top 10 languages spoken at home")
-
-language_at_home %>%
-  table_census_vector()
+plot_table_row(
+  subsection_heading("Language spoken at home"),
+  language_at_home %>%
+    plot_census_vector(vector_description = "top 10 languages spoken at home"),
+  language_at_home %>%
+    table_census_vector()
+)
 ```
-
-::::
 
 :::::
 
@@ -550,14 +529,6 @@ data_breakdown %>%
 
 :::::
 
-::::: {.row}
-
-:::: {.col-sm-6}
-
-```{r subsection-country-of-origin}
-subsection_heading("Country of origin")
-```
-
 ```{r ethnic_origin}
 ethnic_origin <- data_breakdown %>%
   filter(vector_label_short == "ethnic_origin") %>%
@@ -566,19 +537,13 @@ ethnic_origin <- data_breakdown %>%
   arrange(-value) %>%
   derive_census_vector_order(by_value = TRUE)
 
-ethnic_origin %>%
-  plot_census_vector(vector_description = "ethnic_origin")
-
-ethnic_origin %>%
-  table_census_vector()
-```
-
-::::
-
-:::: {.col-sm-6}
-
-```{r subsection-visible-minority}
-subsection_heading("Visible minority population")
+plot_table_row(
+  subsection_heading("Country of origin"),
+  ethnic_origin %>%
+    plot_census_vector(vector_description = "ethnic_origin"),
+  ethnic_origin %>%
+    table_census_vector()
+)
 ```
 
 ```{r visible_minority}
@@ -591,13 +556,11 @@ visible_minority <- data_breakdown %>%
   # Put "not a visible minority" last
   mutate(label = forcats::fct_relevel(label, "Not a visible minority", after = Inf))
 
-visible_minority %>%
-  plot_census_vector(vector_description = "visible minority population")
-
-visible_minority %>%
-  table_census_vector()
+plot_table_row(
+  subsection_heading("Visible minority population"),
+  visible_minority %>%
+    plot_census_vector(vector_description = "visible minority population"),
+  visible_minority %>%
+    table_census_vector()
+)
 ```
-
-::::
-
-:::::

@@ -69,14 +69,13 @@ plot_census_vector_static <- function(data, prop = TRUE, width = 20, dollar = FA
 #' @param dollar Whether the variable shown is in dollars. Defaults to FALSE.
 #' @param vector_description A short description of the vector, used for forming alt text for the plot.
 #' @param aria_label Aria label / alt text for the plot. Defaults to use \code{vector_description}: "Bar chart showing the breakdown of \code{vector_description}. The data is in the table that follows.", but can be overridden.
+#' @param height Plot height. Defaults to 50 times the number of rows in the data.
 #'
 #' @export
 #'
 #' @examples
 #' # TODO
-plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE,
-                               vector_description,
-                               aria_label = glue::glue("Bar chart showing the breakdown of {vector_description}. The data is in the table that follows.")) {
+plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE, vector_description, aria_label = glue::glue("Bar chart showing the breakdown of {vector_description}. The data is in the table that follows."), height = plot_height(data)) {
 
   # Select value_proportion if prop = TRUE
 
@@ -116,7 +115,8 @@ plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE,
     text = ~value_label,
     textposition = "outside",
     cliponaxis = FALSE,
-    textfont = list(color = "black")
+    textfont = list(color = "black"),
+    height = height
   )
 
   # Format x-axis labels (% or $)
@@ -157,3 +157,7 @@ str_wrap_factor <- function(x, width) {
 
 grey_colour <- "#B8B8B8"
 base_size <- 14
+
+plot_height <- function(data, height_scale = 50) {
+  nrow(data) * height_scale
+}

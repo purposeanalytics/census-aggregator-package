@@ -19,7 +19,7 @@ get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions
   check_internet()
 
   # Get all child vectors for each vector
-  children_vectors <- census_vectors %>%
+  children_vectors <- vectors %>%
     purrr::set_names() %>%
     purrr::map_dfr(cancensus::child_census_vectors,
       keep_parent = TRUE,

@@ -43,7 +43,7 @@ plot_census_vector_static <- function(data, prop = TRUE, width = 20, dollar = FA
 
   # Initial plot
 
-  p <-  ggplot2::ggplot(data = data) +
+  p <- ggplot2::ggplot(data = data) +
     ggplot2::geom_col(ggplot2::aes(x = value, y = label)) +
     ggplot2::geom_text(ggplot2::aes(x = value, y = label, label = value_label), hjust = -0.25)
 
@@ -68,12 +68,15 @@ plot_census_vector_static <- function(data, prop = TRUE, width = 20, dollar = FA
 #' @param width Passed along to str_wrap for wrapping y-axis labels. Defaults to a width of 20.
 #' @param dollar Whether the variable shown is in dollars. Defaults to FALSE.
 #' @param vector_description A short description of the vector, used for forming alt text for the plot.
+#' @param aria_label Aria label / alt text for the plot. Defaults to use \code{vector_description}: "Bar chart showing the breakdown of \code{vector_description}. The data is in the table that follows.", but can be overridden.
 #'
 #' @export
 #'
 #' @examples
 #' # TODO
-plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE, vector_description, aria_label = glue::glue("Bar chart showing the breakdown of {vector_description}. The data is in the table that follows.")) {
+plot_census_vector <- function(data, prop = TRUE, width = 20, dollar = FALSE,
+                               vector_description,
+                               aria_label = glue::glue("Bar chart showing the breakdown of {vector_description}. The data is in the table that follows.")) {
 
   # Select value_proportion if prop = TRUE
 

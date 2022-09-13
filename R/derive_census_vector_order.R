@@ -9,7 +9,6 @@
 #' @examples
 #' # TODO
 derive_census_vector_order <- function(data, by_value = FALSE) {
-
   if (by_value) {
     data %>%
       dplyr::mutate(label = forcats::fct_reorder(.data$label, .data$value, .desc = TRUE))

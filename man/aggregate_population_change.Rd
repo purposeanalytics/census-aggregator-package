@@ -10,7 +10,7 @@ aggregate_population_change(data)
 \item{data}{Data for census vectors, from \code{\link{get_census_vectors_and_children}}. Must contain exactly two vectors with label containing "Population", e.g. "Population, 2016" and "Population, 2011" to get the population change from 2011 to 2016.}
 }
 \description{
-Average population density across multiple geographies.
+Average population change across multiple geographies. Returns NA if one or more of the population vectors are NA.
 }
 \examples{
 get_census_vectors_and_children(

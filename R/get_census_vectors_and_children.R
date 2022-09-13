@@ -4,7 +4,7 @@
 #'
 #' @param dataset The dataset to query vectors from. Defaults to "CA16", the 2016 Canadian Census.
 #' @inheritParams cancensus::get_census
-#' @param vectors An R vector containing the vector short codes for the Census vectors to download. Vector short codes can be found via \link[cancensus]{list_census_vectors}.
+#' @param vectors An R vector containing the vector short codes for the Census vectors to download. Vector short codes can be found via the \code{vector} field of \code{\link{census_vectors}}.
 #'
 #' @export
 #'
@@ -19,7 +19,7 @@ get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions
   check_internet()
 
   # Get all child vectors for each vector
-  children_vectors <- vectors %>%
+  children_vectors <- census_vectors %>%
     purrr::set_names() %>%
     purrr::map_dfr(cancensus::child_census_vectors,
       keep_parent = TRUE,
@@ -27,7 +27,7 @@ get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions
     )
 
   # Get data for each vector
-  census_vectors <- get_and_tidy_census_data(
+  census_vectors_data <- get_and_tidy_census_data(
     dataset = dataset,
     regions = regions,
     level = level,
@@ -37,7 +37,7 @@ get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions
 
   # Add label and units, derive "aggregation_type"
   children_vectors %>%
-    dplyr::left_join(census_vectors, by = "vector") %>%
+    dplyr::left_join(census_vectors_data, by = "vector") %>%
     dplyr::distinct() %>%
     derive_aggregation_type()
 }

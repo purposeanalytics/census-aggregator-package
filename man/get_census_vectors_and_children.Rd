@@ -19,7 +19,7 @@ get_census_vectors_and_children(
 
 \item{level}{The census aggregation level to retrieve, defaults to \code{"Regions"}. One of \code{"Regions"}, \code{"PR"}, \code{"CMA"}, \code{"CD"}, \code{"CSD"}, \code{"CT"}, \code{"DA"}, \code{"EA"} (for 1996), or \code{"DB"} (for 2001-2016).}
 
-\item{vectors}{An R vector containing the vector short codes for the Census vectors to download. Vector short codes can be found via \link[cancensus]{list_census_vectors}.}
+\item{vectors}{An R vector containing the vector short codes for the Census vectors to download. Vector short codes can be found via the \code{vector} field of \code{\link{census_vectors}}.}
 
 \item{quiet}{When TRUE, suppress messages and warnings.}
 }

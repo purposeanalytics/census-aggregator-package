@@ -158,6 +158,25 @@ vectors_metadata <- censusaggregatorapp::vectors %>%
 vectors_data_filtered <- vectors_data %>%
   filter(!(vector %in% c("v_CA16_407", "v_CA16_402")))
 
+# Change "population" for shelter cost to be parent vector value (i.e. # of renters/owners), since it uses the population field to average
+shelter_cost_population <- vectors_data_filtered %>%
+  filter(
+    str_starts(vector_label_short, "shelter_cost_"),
+    vector != highest_parent_vector
+  ) %>%
+  select(vector, highest_parent_vector) %>%
+  left_join(vectors_data_filtered %>%
+    select(vector, population = value),
+  by = c("highest_parent_vector" = "vector")
+  ) %>%
+  select(vector, population)
+
+shelter_cost_population <- crossing(geo_uid = regions, vector = shelter_cost_population[["vector"]]) %>%
+  left_join(shelter_cost_population, by = "vector")
+
+vectors_data_filtered <- vectors_data_filtered %>%
+  rows_update(shelter_cost_population, by = c("geo_uid", "vector"))
+
 data_breakdown <- vectors_data_filtered %>%
   aggregate_census_vectors() %>%
   distinct() %>%
@@ -384,17 +403,6 @@ section_heading("Income and housing")
 
 ::: {.row .mb-2}
 
-```{r}
-# Boxes:
-# Estimated median income
-# Low income (LIM-AT)
-# Unaffordable housing
-
-# Charts: 
-# Shelter cost (renter/owner)
-# Household tenure
-```
-
 ```{r median_income}
 shiny::column(
   width = 4,
@@ -421,6 +429,26 @@ shiny::column(
 )
 ```
 
+:::
+
+::: {.row}
+
+```{r shelter-cost}
+shelter_cost <- data_breakdown %>%
+  filter(
+    str_starts(vector_label_short, "shelter_cost"),
+    vector != highest_parent_vector
+  ) %>%
+  derive_census_vector_order()
+
+header_and_barchart(
+  subsection_heading("Average shelter cost"),
+  shelter_cost %>%
+    inline_barchart("dollar")
+)
+```
+
+
 ```{r household-tenure}
 household_tenure <- data_breakdown %>%
   filter(
@@ -430,7 +458,7 @@ household_tenure <- data_breakdown %>%
   derive_census_vector_order()
 
 header_and_barchart(
-subsection_heading("Household tenure"),
+  subsection_heading("Household tenure"),
   household_tenure %>%
     inline_barchart()
 )
@@ -442,47 +470,87 @@ subsection_heading("Household tenure"),
 section_heading("Diversity and immigration")
 ```
 
-::::: {.row}
+::: {.row .mb-2}
 
-:::: {.col-sm-6}
+```{r visible-minority-summary}
+visible_minority <- data_breakdown %>%
+  filter(
+    vector_label_short == "visible_minority",
+    vector != highest_parent_vector
+  )
 
-```{r subsection-immigrant-status}
-subsection_heading("Immigrant status")
+visible_minority_summary <- visible_minority %>%
+  filter(label == "Total visible minority population") %>%
+  pull(value_proportion) %>%
+  percent(0.1)
+
+shiny::column(
+  width = 3,
+  snapshot_card("Visible minority", visible_minority_summary)
+)
 ```
 
 ```{r immigrant-status}
-data_breakdown %>%
+immigrant_status <- data_breakdown %>%
   filter(
     vector_label_short == "immigrant_status",
     vector != highest_parent_vector
   ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector(vector_description = "immigrant status")
-```
+  mutate(across(value_proportion, percent, 0.1))
 
-::::
+immigrant_status_total <- immigrant_status %>%
+  filter(label == "Immigrants") %>%
+  pull(value_proportion)
 
-:::: {.col-sm-6}
+immigrant_status_recent <- immigrant_status %>%
+  filter(label != "Immigrants") %>%
+  pull(value_proportion)
 
-```{r subsection-aboriginal-identity}
-subsection_heading("Aboriginal identity")
+shiny::column(
+  width = 3,
+  snapshot_card("Total immigrants", immigrant_status_total)
+)
+
+shiny::column(
+  width = 3,
+  snapshot_card("Recent immigrants<br>(2011 to 2016)", immigrant_status_recent)
+)
 ```
 
 ```{r aboriginal-identity}
-data_breakdown %>%
+aboriginal_identity <- data_breakdown %>%
   filter(
     vector_label_short == "aboriginal_identity",
     vector != highest_parent_vector
   ) %>%
-  derive_census_vector_order() %>%
-  plot_census_vector(vector_description = "Aboriginal identity")
+  pull(value_proportion) %>%
+  percent(0.01)
+
+shiny::column(
+  width = 3,
+  snapshot_card("Aboriginal identity", aboriginal_identity)
+)
 ```
 
-::::
-
-:::::
+:::
 
 ::: {.row}
+
+```{r visible-minority-breakdown}
+visible_minority <- data_breakdown %>%
+  filter(
+    vector_label_short == "visible_minority",
+    vector != highest_parent_vector
+  ) %>%
+  filter(!label %in% c("Total visible minority population", "Not a visible minority")) %>%
+  derive_census_vector_order(TRUE)
+
+header_and_barchart(
+  subsection_heading("Visible minority population"),
+  visible_minority %>%
+    inline_barchart()
+)
+```
 
 ```{r ethnic_origin}
 ethnic_origin <- data_breakdown %>%
@@ -495,23 +563,6 @@ ethnic_origin <- data_breakdown %>%
 header_and_barchart(
   subsection_heading("Country of origin"),
   ethnic_origin %>%
-    inline_barchart()
-)
-```
-
-```{r visible_minority}
-visible_minority <- data_breakdown %>%
-  filter(
-    vector_label_short == "visible_minority",
-    vector != highest_parent_vector
-  ) %>%
-  derive_census_vector_order(TRUE) %>%
-  # Put "not a visible minority" last
-  mutate(label = forcats::fct_relevel(label, "Not a visible minority", after = Inf))
-
-header_and_barchart(
-  subsection_heading("Visible minority population"),
-  visible_minority %>%
     inline_barchart()
 )
 ```

@@ -1,11 +1,24 @@
 #' @export
-inline_barchart <- function(data) {
+inline_barchart <- function(data, format = "proportion") {
+  if (format == "proportion") {
+    data <- data %>%
+      dplyr::mutate(
+        value = value_proportion,
+        value_fmt = scales::percent(value_proportion, accuracy = 0.1)
+      )
+  } else if (format == "dollar") {
+    data <- data %>%
+      dplyr::mutate(
+        value_fmt = scales::dollar(value, accuracy = 1)
+      )
+  }
+
+  data <- data %>%
+    dplyr::mutate(hist = value) %>%
+    dplyr::select(label, hist, value_fmt) %>%
+    dplyr::arrange(label)
+
   data %>%
-    dplyr::mutate(
-      hist = value_proportion,
-      value_proportion = scales::percent(value_proportion, accuracy = 0.1)
-    ) %>%
-    dplyr::select(label, hist, value_proportion) %>%
     gt::gt() %>%
     gtExtras::gt_plt_bar_pct(hist, scaled = FALSE, fill = "grey", background = "transparent") %>%
     gt::cols_width(hist ~ 200) %>%

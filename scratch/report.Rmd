@@ -4,7 +4,7 @@ output:
     theme:
       version: 4
 params:
-  geo_uid: !r c("3520005", "1103035")
+  geo_uid: !r c("3520005", "1101011")
   level: "csd"
 # params:
 #   geo_uid: !r c("6020500.02", "6020100.02")
@@ -82,6 +82,20 @@ header_and_barchart <- function(header, plot) {
     width = 6,
     header,
     plot
+  )
+}
+
+pull_and_format_value <- function(data, format = "percent") {
+  value <- data[["value"]]
+
+  if (is.na(value)) {
+    return(htmltools::HTML("&#8212;"))
+  }
+
+  switch(format,
+    percent = scales::percent(value, 0.1),
+    comma = scales::comma(value, 1),
+    dollar = scales::dollar(value)
   )
 }
 ```
@@ -204,32 +218,22 @@ areas_selected <- glue::glue("{n} {geography}{s}",
 
 population <- data_breakdown %>%
   filter(vector_label_short == "population_2016") %>%
-  pull(value) %>%
-  comma()
+  pull_and_format_value("comma")
 
 households <- metadata %>%
   select(geo_uid, households) %>%
   distinct() %>%
-  summarise(across(households, sum, na.rm = TRUE)) %>%
-  pull(households) %>%
-  comma()
+  summarise(value = sum(households)) %>%
+  pull_and_format_value("comma")
 
 population_change <- vectors_data %>%
   aggregate_population_change() %>%
-  pull(value)
-
-if (!is.na(population_change)) {
-  population_change <- population_change %>%
-    percent(accuracy = 0.1)
-} else {
-  population_change <- htmltools::HTML("&#8212;")
-}
+  pull_and_format_value()
 
 population_density <- vectors_data %>%
   filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
   aggregate_population_density() %>%
-  pull(value) %>%
-  comma()
+  pull_and_format_value("comma")
 ```
 
 ```{r population}
@@ -397,8 +401,7 @@ shiny::column(
 ```{r lim_at}
 lim_at <- data_breakdown %>%
   filter(vector_label_short == "lim_at") %>%
-  pull(value_proportion) %>%
-  percent(0.1)
+  pull_and_format_value()
 
 shiny::column(
   width = 4,
@@ -465,8 +468,8 @@ visible_minority <- data_breakdown %>%
 
 visible_minority_summary <- visible_minority %>%
   filter(label == "Total visible minority population") %>%
-  pull(value_proportion) %>%
-  percent(0.1)
+  select(-value, value = value_proportion) %>%
+  pull_and_format_value()
 
 shiny::column(
   width = 3,
@@ -480,15 +483,16 @@ immigrant_status <- data_breakdown %>%
     vector_label_short == "immigrant_status",
     vector != highest_parent_vector
   ) %>%
-  mutate(across(value_proportion, percent, 0.1))
+  select(-value) %>%
+  rename(value = value_proportion)
 
 immigrant_status_total <- immigrant_status %>%
   filter(label == "Immigrants") %>%
-  pull(value_proportion)
+  pull_and_format_value()
 
 immigrant_status_recent <- immigrant_status %>%
   filter(label != "Immigrants") %>%
-  pull(value_proportion)
+  pull_and_format_value()
 
 shiny::column(
   width = 3,
@@ -507,8 +511,8 @@ aboriginal_identity <- data_breakdown %>%
     vector_label_short == "aboriginal_identity",
     vector != highest_parent_vector
   ) %>%
-  pull(value_proportion) %>%
-  percent(0.01)
+  select(-value, value = value_proportion) %>%
+  pull_and_format_value()
 
 shiny::column(
   width = 3,

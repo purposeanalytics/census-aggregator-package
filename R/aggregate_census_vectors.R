@@ -122,7 +122,7 @@ aggregate_number_additive <- function(data, original_data) {
     dplyr::mutate(
       value_proportion = .data$value / .data$parent_value,
       value = ifelse(.data$any_flag, NA, value),
-      value_proportion = ifelse(.data$any_flag, NA, value)
+      value_proportion = ifelse(.data$any_flag, NA, value_proportion)
     ) %>%
     dplyr::select(-.data$parent_value, -.data$any_flag)
 }

@@ -4,7 +4,7 @@ output:
     theme:
       version: 4
 params:
-  geo_uid: !r c("3520005")
+  geo_uid: !r c("3520005", "1103035")
   level: "csd"
 # params:
 #   geo_uid: !r c("6020500.02", "6020100.02")
@@ -127,6 +127,8 @@ vectors_data <- vectors_data %>%
   # tidyr::complete(vector, geo_uid, fill = list(value = 0)) %>%
   left_join(metadata, by = "geo_uid")
 
+# Collapse / fake metadata for age cohorts
+
 age_cohorts_update <- tidyr::crossing(vector = c("0 to 14", "15 to 24", "25 to 44", "45 to 65", "65 to 84", "85+"), geo_uid = regions) %>%
   mutate(
     highest_parent_vector = "v_CA16_1",
@@ -147,7 +149,6 @@ vectors_data <- vectors_data %>%
 vectors_data <- vectors_data %>%
   derive_aggregation_type()
 
-# Aggregate vectors - treat v_CA16_407 (land area) separately, since it will be used for population density, and v_CA16_402 (population 2011) separately, since it will be used for population change
 vectors_metadata <- censusaggregatorapp::vectors %>%
   bind_rows(
     age_cohorts_update %>%
@@ -155,27 +156,10 @@ vectors_metadata <- censusaggregatorapp::vectors %>%
       distinct()
   )
 
+# Aggregate vectors - treat v_CA16_407 (land area) separately, since it will be used for population density, and v_CA16_402 (population 2011) separately, since it will be used for population change
+
 vectors_data_filtered <- vectors_data %>%
   filter(!(vector %in% c("v_CA16_407", "v_CA16_402")))
-
-# Change "population" for shelter cost to be parent vector value (i.e. # of renters/owners), since it uses the population field to average
-shelter_cost_population <- vectors_data_filtered %>%
-  filter(
-    str_starts(vector_label_short, "shelter_cost_"),
-    vector != highest_parent_vector
-  ) %>%
-  select(vector, highest_parent_vector) %>%
-  left_join(vectors_data_filtered %>%
-    select(vector, population = value),
-  by = c("highest_parent_vector" = "vector")
-  ) %>%
-  select(vector, population)
-
-shelter_cost_population <- crossing(geo_uid = regions, vector = shelter_cost_population[["vector"]]) %>%
-  left_join(shelter_cost_population, by = "vector")
-
-vectors_data_filtered <- vectors_data_filtered %>%
-  rows_update(shelter_cost_population, by = c("geo_uid", "vector"))
 
 data_breakdown <- vectors_data_filtered %>%
   aggregate_census_vectors() %>%

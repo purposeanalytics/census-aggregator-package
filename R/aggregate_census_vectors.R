@@ -29,21 +29,23 @@ aggregate_census_vectors <- function(data) {
   check_data(data)
 
   # Make combined field for units and aggregation and split on it
-  data <- data %>%
+  original_data <- data %>%
     dplyr::mutate(
       units_aggregation = paste0(.data$units, "_", .data$aggregation_type)
     )
 
-  data <- split(data, data$units_aggregation)
+  data <- split(original_data, original_data$units_aggregation)
 
   # Iterate through and aggregate
 
-  purrr::imap_dfr(data, function(data, units_aggregation) {
+  purrr::imap_dfr(data, function(data, units_aggregation, original = original_data) {
     if (units_aggregation %in% names(units_and_aggregation_functions)) {
       # Aggregate if it is in the list of supported aggregations / functions
       func <- units_and_aggregation_functions[[units_aggregation]][["func"]]
 
-      do.call(func, list(data = data))
+      # browser()
+
+      do.call(func, list(data = data, original_data = original))
     } else {
       # If not, do not aggregate and just warn / drop data
       units_aggregation_split <- stringr::str_split(units_aggregation, "_", simplify = TRUE)
@@ -93,7 +95,7 @@ units_and_aggregation_functions <- tibble::tribble(
 ) %>%
   split(.$units_aggregation)
 
-aggregate_number_additive <- function(data) {
+aggregate_number_additive <- function(data, original_data) {
 
   # Total value is derived by summing value
 
@@ -103,6 +105,7 @@ aggregate_number_additive <- function(data) {
       .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
     ) %>%
     dplyr::summarise(
+      any_flag = any(is.na(.data$value)) | any(.data$value == 0),
       value = sum(.data$value),
       .groups = "drop"
     )
@@ -111,12 +114,17 @@ aggregate_number_additive <- function(data) {
 
   aggregate_summary_parents_only <- aggregate_summary %>%
     dplyr::filter(.data$vector == .data$highest_parent_vector) %>%
-    dplyr::select(.data$highest_parent_vector, parent_value = .data$value)
+    dplyr::select(.data$highest_parent_vector, parent_value = .data$value, .data$any_flag)
 
   aggregate_summary %>%
+    dplyr::select(-.data$any_flag) %>%
     dplyr::left_join(aggregate_summary_parents_only, by = "highest_parent_vector") %>%
-    dplyr::mutate(value_proportion = .data$value / .data$parent_value) %>%
-    dplyr::select(-.data$parent_value)
+    dplyr::mutate(
+      value_proportion = .data$value / .data$parent_value,
+      value = ifelse(.data$any_flag, NA, value),
+      value_proportion = ifelse(.data$any_flag, NA, value)
+    ) %>%
+    dplyr::select(-.data$parent_value, -.data$any_flag)
 }
 
 aggregate_number_average <- function() {
@@ -127,38 +135,73 @@ aggregate_ratio_average <- function() {
 
 }
 
-aggregate_percentage_average <- function(data) {
+aggregate_percentage_average <- function(data, original_data) {
+  browser()
 
   # Multiply population by value (/100), then sum and divide by total population in vector
+  # The population is not the actual Population - it might be persons in private households, etc
+  # Therefore, just base it on the total of the highest parent vector
 
-  data %>%
+  percentage_summary <- data %>%
+    dplyr::filter(.data$vector != .data$highest_parent_vector) %>%
     dplyr::mutate(value_proportion = .data$value / 100) %>%
     dplyr::group_by(
       .data$highest_parent_vector, .data$vector, .data$type, .data$label, .data$units,
       .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
-    ) %>%
-    dplyr::summarise(
-      value = sum(.data$population * .data$value_proportion) / sum(.data$population),
-      .groups = "drop"
     )
+
+  # Flag if any of the parent are NA or 0 (values suppressed or not counted)
+  parent_summary <- data %>%
+    dplyr::filter(.data$vector == .data$highest_parent_vector) %>%
+    dplyr::group_by(.data$vector) %>%
+    dplyr::summarise(
+      any_flag = any(is.na(.data$value)) | any(.data$value == 0),
+      parent_value = sum(.data$value)
+    )
+
+  percentage_summary %>%
+    dplyr::left_join(parent_summary, by = "highest_parent_vector") %>%
+    dplyr::mutate(
+      value = sum(.data$parent_value * .data$value_proportion) / sum(.data$parent_value),
+      # Set to NA
+      value = dplyr::ifelse(.data$any_flag, NA, value)
+    ) %>%
+    dplyr::select(-.data$parent_value, -.data$any_flag)
 }
 
 aggregate_currency_median <- function() {
 
 }
 
-aggregate_currency_average <- function(data) {
+aggregate_currency_average <- function(data, original_data) {
 
-  # Get "total value" (value * population) for each, then sum within vector and divide by total Population
+  # Get "total value" (value * population) for each, then sum within vector and divide by total population
+  # Population is not necessarily literally population, but the population for which this measure is relevant (the highest parent vector)
 
-  data %>%
-    dplyr::mutate(value_total = .data$value * .data$population) %>%
+  parent <- original_data %>%
+    dplyr::filter(.data$vector %in% data[["highest_parent_vector"]]) %>%
+    dplyr::select(.data$geo_uid, .data$vector, parent_value = .data$value) %>%
+    dplyr::group_by(.data$vector) %>%
+    dplyr::mutate(
+      # Flag if any of the parent are NA or 0 (values suppressed or not counted)
+      any_flag = any(is.na(.data$parent_value)) | any(.data$parent_value == 0)
+    )
+
+  children <- data %>%
+    dplyr::filter(.data$vector != .data$highest_parent_vector)
+
+  children %>%
+    dplyr::left_join(parent, by = c("geo_uid", "vector")) %>%
+    dplyr::mutate(value_total = .data$value * .data$parent_value) %>%
     dplyr::group_by(
       .data$highest_parent_vector, .data$vector, .data$type, .data$label, .data$units,
       .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
     ) %>%
     dplyr::summarise(
       value = sum(.data$value_total) / sum(.data$population),
+      # Set to NA if any of the parent are NA or 0
+      value = ifelse(.data$any_flag, NA, value),
       .groups = "drop"
-    )
+    ) %>%
+    dplyr::distinct()
 }

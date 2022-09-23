@@ -4,7 +4,7 @@ output:
     theme:
       version: 4
 params:
-  geo_uid: !r c("3520005", "1101011")
+  geo_uid: !r c("3520005")
   level: "csd"
 # params:
 #   geo_uid: !r c("6020500.02", "6020100.02")
@@ -105,15 +105,14 @@ library(dplyr)
 library(censusaggregate)
 library(purrr)
 library(scales)
-library(knitr)
-library(kableExtra)
 library(tidyr)
 library(stringr)
 library(bslib)
 library(arrow)
 library(censusaggregatorapp)
 library(sfarrow)
-# library(tmap)
+library(ggplot2)
+library(sf)
 ```
 
 ```{r data}
@@ -185,7 +184,7 @@ data_breakdown <- vectors_data_filtered %>%
   ungroup()
 ```
 
-```{r map, fig.height = 5, dpi = 300, eval = FALSE}
+```{r map, fig.height = 5, dpi = 300}
 boundaries_dataset <- glue::glue("extdata/{level}")
 
 boundaries_data <- open_dataset(system.file(boundaries_dataset, package = "censusaggregatorapp"))
@@ -193,8 +192,11 @@ boundaries_data <- boundaries_data %>%
   filter(geo_uid %in% regions) %>%
   read_sf_dataset()
 
-tm_shape(boundaries_data) +
-  tm_polygons(col = "white")
+boundaries_data %>%
+  st_union() %>%
+  ggplot() +
+  geom_sf(fill = NA) +
+  theme_void()
 ```
 
 
@@ -401,6 +403,7 @@ shiny::column(
 ```{r lim_at}
 lim_at <- data_breakdown %>%
   filter(vector_label_short == "lim_at") %>%
+  select(-value, value = value_proportion) %>%
   pull_and_format_value()
 
 shiny::column(
@@ -410,9 +413,17 @@ shiny::column(
 ```
 
 ```{r unaffordable_housing}
+unaffordable_housing <- data_breakdown %>%
+  filter(
+    vector_label_short == "unaffordable_housing",
+    vector != highest_parent_vector
+  ) %>%
+  select(-value, value = value_proportion) %>%
+  pull_and_format_value()
+
 shiny::column(
   width = 4,
-  snapshot_card("Unaffordable housing", "---")
+  snapshot_card("Unaffordable housing", unaffordable_housing)
 )
 ```
 

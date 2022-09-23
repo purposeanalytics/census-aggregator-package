@@ -136,7 +136,6 @@ aggregate_ratio_average <- function() {
 }
 
 aggregate_percentage_average <- function(data, original_data) {
-  browser()
 
   # Multiply population by value (/100), then sum and divide by total population in vector
   # The population is not the actual Population - it might be persons in private households, etc
@@ -191,14 +190,14 @@ aggregate_currency_average <- function(data, original_data) {
     dplyr::filter(.data$vector != .data$highest_parent_vector)
 
   children %>%
-    dplyr::left_join(parent, by = c("geo_uid", "vector")) %>%
+    dplyr::left_join(parent, by = c("geo_uid", "highest_parent_vector" = "vector")) %>%
     dplyr::mutate(value_total = .data$value * .data$parent_value) %>%
     dplyr::group_by(
       .data$highest_parent_vector, .data$vector, .data$type, .data$label, .data$units,
       .data$parent_vector, .data$aggregation, .data$aggregation_type, .data$details
     ) %>%
     dplyr::summarise(
-      value = sum(.data$value_total) / sum(.data$population),
+      value = sum(.data$value_total) / sum(.data$parent_value),
       # Set to NA if any of the parent are NA or 0
       value = ifelse(.data$any_flag, NA, value),
       .groups = "drop"

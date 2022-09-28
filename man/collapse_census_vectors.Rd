@@ -9,7 +9,7 @@ collapse_census_vectors(data, vectors)
 \arguments{
 \item{data}{Census data, from e.g. \link[cancensus]{list_census_vectors} or \link{get_census_vectors_and_children}}
 
-\item{vectors}{A data frame of existing census vectors (\code{vector}) and new "vectors" (\code{new_vector}) which they will be collapsed into. Both the \code{vector} and \code{label} fields in \code{data} will be replaced with \code{new_vector}, and the \code{details} field will have the label element replaced with the new vector element.}
+\item{vectors}{A data frame of existing census vectors (\code{vector}) and new "vectors" (\code{new_vector}) which they will be collapsed into. The \code{vector} field in \code{data} will be replaced with \code{new_vector}. If relevant, so will the \code{label} field, and the \code{details} field will have the label element replaced with the new vector element.}
 }
 \description{
 Collapse several census vectors into a single vector

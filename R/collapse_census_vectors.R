@@ -4,6 +4,7 @@
 #'
 #' @param data Census data, from e.g. \link[cancensus]{list_census_vectors} or \link{get_census_vectors_and_children}
 #' @param vectors A data frame of existing census vectors (\code{vector}) and new "vectors" (\code{new_vector}) which they will be collapsed into. The \code{vector} field in \code{data} will be replaced with \code{new_vector}. If relevant, so will the \code{label} field, and the \code{details} field will have the label element replaced with the new vector element.
+#' @param aggregate Whether to aggregate (sum) existing values. Defaults to FALSE.
 #'
 #' @export
 #'
@@ -16,7 +17,7 @@
 #' list_census_vectors("CA21") %>%
 #'   collapse_census_vectors(couples_with_children) %>%
 #'   filter(vector %in% couples_with_children[["new_vector"]])
-collapse_census_vectors <- function(data, vectors) {
+collapse_census_vectors <- function(data, vectors, aggregate = FALSE) {
   data <- data %>%
     dplyr::left_join(vectors, by = "vector") %>%
     dplyr::mutate(
@@ -33,7 +34,28 @@ collapse_census_vectors <- function(data, vectors) {
       dplyr::mutate(label = dplyr::coalesce(new_vector, label))
   }
 
-  data %>%
-    dplyr::select(-new_vector) %>%
-    dplyr::distinct()
+  data <- data %>%
+    dplyr::select(-new_vector)
+
+  if (aggregate) {
+    data_without_new <- data %>%
+      dplyr::filter(!vector %in% vectors[["new_vector"]])
+
+    data_only_new <- data %>%
+      dplyr::filter(vector %in% vectors[["new_vector"]])
+
+    data_only_new <- data_only_new %>%
+      dplyr::group_by(dplyr::across(-value)) %>%
+      dplyr::summarise(
+        value = sum(value),
+        .groups = "drop"
+      )
+
+    data <- dplyr::bind_rows(
+      data_without_new,
+      data_only_new
+    )
+  }
+
+  data
 }

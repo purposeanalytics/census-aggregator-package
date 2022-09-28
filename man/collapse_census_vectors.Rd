@@ -4,12 +4,14 @@
 \alias{collapse_census_vectors}
 \title{Collapse census vectors}
 \usage{
-collapse_census_vectors(data, vectors)
+collapse_census_vectors(data, vectors, aggregate = FALSE)
 }
 \arguments{
 \item{data}{Census data, from e.g. \link[cancensus]{list_census_vectors} or \link{get_census_vectors_and_children}}
 
 \item{vectors}{A data frame of existing census vectors (\code{vector}) and new "vectors" (\code{new_vector}) which they will be collapsed into. The \code{vector} field in \code{data} will be replaced with \code{new_vector}. If relevant, so will the \code{label} field, and the \code{details} field will have the label element replaced with the new vector element.}
+
+\item{aggregate}{Whether to aggregate (sum) existing values. Defaults to FALSE.}
 }
 \description{
 Collapse several census vectors into a single vector

@@ -16,7 +16,7 @@ reassign_parent_vector <- function(data, vectors) {
 
   if ("highest_parent_vector" %in% names(data)) {
     data <- data %>%
-      dplyr::mutate(highest_parent_vector = dplyr::coalesce(new_parent_vector, parent_vector))
+      dplyr::mutate(highest_parent_vector = dplyr::coalesce(new_parent_vector, highest_parent_vector))
   }
 
   if ("label_short" %in% names(data)) {

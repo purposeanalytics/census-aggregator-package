@@ -24,9 +24,13 @@ inline_barchart <- function(data, format = "proportion") {
     dplyr::select(label, hist, value_fmt) %>%
     dplyr::arrange(label)
 
+  # If all values are NA (i.e. all suppressed) need to set scaled = TRUE, to not show bars at all
+  # Faking this a bit - scaling them all down to 0 (out of 100)
+  scale_bars <- all(is.na(data[["value_fmt"]]))
+
   data %>%
     gt::gt() %>%
-    gtExtras::gt_plt_bar_pct(hist, scaled = FALSE, fill = "grey", background = "transparent") %>%
+    gtExtras::gt_plt_bar_pct(hist, scaled = scale_bars, fill = "grey", background = "transparent") %>%
     # Coalesce formatted NA to em dash
     gt::sub_missing(columns = value_fmt) %>%
     gt::cols_width(hist ~ 200) %>%

@@ -2,6 +2,7 @@
 
 export("%>%")
 export(aggregate_census_vectors)
+export(aggregate_estimated_median_income)
 export(aggregate_population_change)
 export(aggregate_population_density)
 export(collapse_census_vectors)

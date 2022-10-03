@@ -16,8 +16,9 @@ aggregate_estimated_median_income <- function(data) {
     dplyr::pull(value)
 
   # If count is less than 1000, return NA - too small to accurately estimate
+  # Or if NA (suppressed)
 
-  if (households_with_total_income < 1000) {
+  if (is.na(households_with_total_income) | households_with_total_income < 1000) {
     return(tibble::tibble(value = NA))
   }
 

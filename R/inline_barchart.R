@@ -13,6 +13,12 @@ inline_barchart <- function(data, format = "proportion") {
       )
   }
 
+  # Coalesce NAs to 0 for bar
+  data <- data %>%
+    dplyr::mutate(
+      value = dplyr::coalesce(value, 0)
+    )
+
   data <- data %>%
     dplyr::mutate(hist = value) %>%
     dplyr::select(label, hist, value_fmt) %>%
@@ -21,6 +27,8 @@ inline_barchart <- function(data, format = "proportion") {
   data %>%
     gt::gt() %>%
     gtExtras::gt_plt_bar_pct(hist, scaled = FALSE, fill = "grey", background = "transparent") %>%
+    # Coalesce formatted NA to em dash
+    gt::sub_missing(columns = value_fmt) %>%
     gt::cols_width(hist ~ 200) %>%
     gt::cols_align(align = "left", columns = label) %>%
     gt::tab_options(

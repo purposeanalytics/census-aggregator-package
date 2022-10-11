@@ -21,33 +21,33 @@ collapse_census_vectors <- function(data, vectors, aggregate = FALSE) {
   data <- data %>%
     dplyr::left_join(vectors, by = "vector") %>%
     dplyr::mutate(
-      vector = dplyr::coalesce(new_vector, vector)
+      vector = dplyr::coalesce(.data$new_vector, .data$vector)
     )
 
   if ("details" %in% names(data)) {
     data <- data %>%
-      dplyr::mutate(details = ifelse(is.na(new_vector), details, stringr::str_replace(details, label, new_vector)))
+      dplyr::mutate(details = ifelse(is.na(.data$new_vector), .data$details, stringr::str_replace(.data$details, .data$label, .data$new_vector)))
   }
 
   if ("label" %in% names(data)) {
     data <- data %>%
-      dplyr::mutate(label = dplyr::coalesce(new_vector, label))
+      dplyr::mutate(label = dplyr::coalesce(.data$new_vector, .data$label))
   }
 
   data <- data %>%
-    dplyr::select(-new_vector)
+    dplyr::select(-.data$new_vector)
 
   if (aggregate) {
     data_without_new <- data %>%
-      dplyr::filter(!vector %in% vectors[["new_vector"]])
+      dplyr::filter(!.data$vector %in% vectors[["new_vector"]])
 
     data_only_new <- data %>%
-      dplyr::filter(vector %in% vectors[["new_vector"]])
+      dplyr::filter(.data$vector %in% vectors[["new_vector"]])
 
     data_only_new <- data_only_new %>%
-      dplyr::group_by(dplyr::across(-value)) %>%
+      dplyr::group_by(dplyr::across(-.data$value)) %>%
       dplyr::summarise(
-        value = sum(value),
+        value = sum(.data$value),
         .groups = "drop"
       )
 

@@ -21,13 +21,13 @@ Imports:
     forcats,
     ggplot2,
     glue,
+    gt,
+    gtExtras,
     htmltools,
-    kableExtra,
-    knitr,
-    lemr,
     magrittr,
     plotly,
     purrr,
+    readr,
     rlang,
     scales,
     stringr,
@@ -40,5 +40,3 @@ Depends:
     R (>= 2.10)
 LazyData: true
 URL: https://purposeanalytics.github.io/census-aggregator-package
-Remotes:
-  purposeanalytics/lemr

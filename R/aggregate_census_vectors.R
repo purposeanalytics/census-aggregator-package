@@ -121,8 +121,8 @@ aggregate_number_additive <- function(data, original_data) {
     dplyr::left_join(aggregate_summary_parents_only, by = "highest_parent_vector") %>%
     dplyr::mutate(
       value_proportion = .data$value / .data$parent_value,
-      value = ifelse(.data$any_flag, NA, value),
-      value_proportion = ifelse(.data$any_flag, NA, value_proportion)
+      value = ifelse(.data$any_flag, NA, .data$value),
+      value_proportion = ifelse(.data$any_flag, NA, .data$value_proportion)
     ) %>%
     dplyr::select(-.data$parent_value, -.data$any_flag)
 }
@@ -163,7 +163,7 @@ aggregate_percentage_average <- function(data, original_data) {
     dplyr::mutate(
       value = sum(.data$parent_value * .data$value_proportion) / sum(.data$parent_value),
       # Set to NA
-      value = dplyr::ifelse(.data$any_flag, NA, value)
+      value = ifelse(.data$any_flag, NA, .data$value)
     ) %>%
     dplyr::select(-.data$parent_value, -.data$any_flag)
 }
@@ -199,7 +199,7 @@ aggregate_currency_average <- function(data, original_data) {
     dplyr::summarise(
       value = sum(.data$value_total) / sum(.data$parent_value),
       # Set to NA if any of the parent are NA or 0
-      value = ifelse(.data$any_flag, NA, value),
+      value = ifelse(.data$any_flag, NA, .data$value),
       .groups = "drop"
     ) %>%
     dplyr::distinct()

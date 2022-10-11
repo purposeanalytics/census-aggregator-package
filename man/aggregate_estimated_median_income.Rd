@@ -10,5 +10,5 @@ aggregate_estimated_median_income(data)
 \item{data}{Data containing income buckets and total count income is based on}
 }
 \description{
-Estimate median income using income buckets, rounded to the nearest $1,000.
+Estimate median income using income buckets, rounded to the nearest $1,000
 }

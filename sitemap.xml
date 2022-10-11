@@ -19,10 +19,16 @@
     <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_census_vectors.html</loc>
   </url>
   <url>
+    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_estimated_median_income.html</loc>
+  </url>
+  <url>
     <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_population_change.html</loc>
   </url>
   <url>
     <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_population_density.html</loc>
+  </url>
+  <url>
+    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/collapse_census_vectors.html</loc>
   </url>
   <url>
     <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/derive_aggregation_type.html</loc>
@@ -43,6 +49,6 @@
     <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/plot_census_vector.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/plot_census_vector_static.html</loc>
+    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/reassign_parent_vector.html</loc>
   </url>
 </urlset>

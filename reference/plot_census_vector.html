@@ -51,7 +51,8 @@
 <span>  dollar <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">vector_description</span>,</span>
 <span> </span>
-<span>    aria_label <span class="op">=</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"Bar chart showing the breakdown of {vector_description}. The data is in the table that follows."</span><span class="op">)</span></span>
+<span>    aria_label <span class="op">=</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"Bar chart showing the breakdown of {vector_description}. The data is in the table that follows."</span><span class="op">)</span>,</span>
+<span>  height <span class="op">=</span> <span class="fu">plot_height</span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -79,6 +80,10 @@
 
 <dt>aria_label</dt>
 <dd><p>Aria label / alt text for the plot. Defaults to use <code>vector_description</code>: "Bar chart showing the breakdown of <code>vector_description</code>. The data is in the table that follows.", but can be overridden.</p></dd>
+
+
+<dt>height</dt>
+<dd><p>Plot height. Defaults to 50 times the number of rows in the data.</p></dd>
 
 </dl></div>
 

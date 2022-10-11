@@ -9,7 +9,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
@@ -47,14 +49,14 @@ By default, cancensus caches in R's temporary directory, but this cache is not p
 
 ## Usage
 
-censusaggregate has two primary functions, the first of which is to retrieve a census vector and *all* of its child vectors (children). Child vectors further break down or provide additional detail to a vector. For example, if we want to get the vector that describes the structural type of dwellings, first we list all vectors for the 2016 census, then filter for the one of interest:
+censusaggregate has two primary functions, the first of which is to retrieve a census vector and *all* of its child vectors (children). Child vectors further break down or provide additional detail to a vector. For example, if we want to get the vector that describes the structural type of dwellings, first we list all vectors for the 2021 census, then filter for the one of interest:
 
 ```{r}
 library(cancensus)
 library(censusaggregate)
 library(dplyr)
 
-dataset <- "CA16"
+dataset <- "CA21"
 
 vector <- list_census_vectors(dataset) %>%
   filter(label == "Occupied private dwellings by structural type of dwelling data")
@@ -62,7 +64,7 @@ vector <- list_census_vectors(dataset) %>%
 vector
 ```
 
-Next we can retrieve the vector using its code (v_CA16_408) and its children, for a given set of regions and at a given level. Here, we retrieve data for three Census subdivisions (CSD), then look at the data, which includes information like the highest parent vector, a description of the vector, the units its in, its direct parent (since children can be nested), the geographic identifier of the CSD, the population and number of households in that CSD, and the data value itself.
+Next we can retrieve the vector using its code (`r vector[["vector"]]`) and its children, for a given set of regions and at a given level. Here, we retrieve data for three Census subdivisions (CSD), then look at the data, which includes information like the highest parent vector, a description of the vector, the units its in, its direct parent (since children can be nested), the geographic identifier of the CSD, the population and number of households in that CSD, and the data value itself.
 
 ```{r}
 vector <- vector[["vector"]]
@@ -79,7 +81,7 @@ vector_with_breakdowns <- get_census_vectors_and_children(
 vector_with_breakdowns
 ```
 
-We can see that there are 10 vectors returned - 9 breakdowns and the original parent vector - each of which with 3 records, one for each of the CSDs we requested data for.
+We can see that there are 10 vectors returned - 9 breakdowns and the original parent vector - each of which has 3 records, one for each of the CSDs we requested data for.
 
 ```{r}
 vector_with_breakdowns %>%
@@ -101,14 +103,14 @@ vector_with_breakdowns %>%
   select(vector, label, value, value_proportion)
 ```
 
-In this case, it returns a field `value` which is the sum of the values within the three CSDs, and `value_proportion`, which breaks down the value of the highest parent vector (v_CA16_408). For example, there are 448,000 households in total a Single-detached house in the queried CSDs, which represents 29.4% of all households in those CSDs.
+In this case, it returns a field `value` which is the sum of the values within the three CSDs, and `value_proportion`, which breaks down the value of the highest parent vector (`r vector`). For example, there are 448,000 households in total a Single-detached house in the queried CSDs, which represents 29.4% of all households in those CSDs.
 
 ## Supported vector aggregation
 
 The vector aggregation happens automatically, based on the vectors' units and aggregation type:
 
 ```{r}
-vectors <- list_census_vectors("CA16") %>%
+vectors <- list_census_vectors(dataset) %>%
   derive_aggregation_type()
 
 vectors  %>%
@@ -139,7 +141,7 @@ To aggregate population change across geographies, `aggregate_population_change`
 
 ```{r}
 population_vectors <- vectors %>% 
-  filter(label %in% c("Population, 2016", "Population, 2011")) %>%
+  filter(label %in% c("Population, 2021", "Population, 2016")) %>%
   pull(vector)
 
 population_change_data <- get_census_vectors_and_children(
@@ -162,7 +164,7 @@ Similarly, the aggregate population density across geographies, `aggregate_popul
 
 ```{r}
 population_density_vectors <- vectors %>%
-  filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
+  filter(label %in% c("Population, 2021", "Land area in square kilometres")) %>%
   pull(vector)
 
 population_density_data <- get_census_vectors_and_children(
@@ -178,6 +180,8 @@ population_density_data %>%
 population_density_data %>%
   aggregate_population_density()
 ```
+
+#### aggregate_estimated_median_income()
 
 ### Unsupported aggregations
 
@@ -203,6 +207,22 @@ get_census_vectors_and_children(
 ) %>%
   aggregate_census_vectors()
 ```
+
+## Utility functions
+
+### collapse_census_vectors()
+
+### derive_aggregation_type()
+
+### derive_census_vector_order()
+
+### reassign_parent_vector()
+
+## Visualizing census data
+
+## plot_census_vector()
+
+## inline_barchart
 
 ## Related work
 

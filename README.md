@@ -63,23 +63,15 @@ censusaggregate has two primary functions, the first of which is to
 retrieve a census vector and *all* of its child vectors (children).
 Child vectors further break down or provide additional detail to a
 vector. For example, if we want to get the vector that describes the
-structural type of dwellings, first we list all vectors for the 2016
+structural type of dwellings, first we list all vectors for the 2021
 census, then filter for the one of interest:
 
 ``` r
 library(cancensus)
 library(censusaggregate)
 library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
 
-dataset <- "CA16"
+dataset <- "CA21"
 
 vector <- list_census_vectors(dataset) %>%
   filter(label == "Occupied private dwellings by structural type of dwelling data")
@@ -88,10 +80,10 @@ vector
 #> # A tibble: 1 × 7
 #>   vector     type  label         units parent_vector aggregation details        
 #>   <chr>      <fct> <chr>         <fct> <chr>         <chr>       <chr>          
-#> 1 v_CA16_408 Total Occupied pri… Numb… <NA>          Additive    CA 2016 Census…
+#> 1 v_CA21_434 Total Occupied pri… Numb… <NA>          Additive    CA 2021 Census…
 ```
 
-Next we can retrieve the vector using its code (v\_CA16\_408) and its
+Next we can retrieve the vector using its code (v\_CA21\_434) and its
 children, for a given set of regions and at a given level. Here, we
 retrieve data for three Census subdivisions (CSD), then look at the
 data, which includes information like the highest parent vector, a
@@ -113,44 +105,43 @@ vector_with_breakdowns <- get_census_vectors_and_children(
 )
 
 vector_with_breakdowns
-#> # A tibble: 30 × 13
+#> # A tibble: 27 × 13
 #>    highest_parent_vector vector     type  label  units parent_vector aggregation
 #>    <chr>                 <chr>      <fct> <chr>  <fct> <chr>         <chr>      
-#>  1 v_CA16_408            v_CA16_408 Total Occup… Numb… <NA>          Additive   
-#>  2 v_CA16_408            v_CA16_408 Total Occup… Numb… <NA>          Additive   
-#>  3 v_CA16_408            v_CA16_408 Total Occup… Numb… <NA>          Additive   
-#>  4 v_CA16_408            v_CA16_409 Total Singl… Numb… v_CA16_408    Additive   
-#>  5 v_CA16_408            v_CA16_409 Total Singl… Numb… v_CA16_408    Additive   
-#>  6 v_CA16_408            v_CA16_409 Total Singl… Numb… v_CA16_408    Additive   
-#>  7 v_CA16_408            v_CA16_410 Total Apart… Numb… v_CA16_408    Additive   
-#>  8 v_CA16_408            v_CA16_410 Total Apart… Numb… v_CA16_408    Additive   
-#>  9 v_CA16_408            v_CA16_410 Total Apart… Numb… v_CA16_408    Additive   
-#> 10 v_CA16_408            v_CA16_411 Total Other… Numb… v_CA16_408    Additive   
-#> # … with 20 more rows, and 6 more variables: aggregation_type <chr>,
+#>  1 v_CA21_434            v_CA21_434 Total Occup… Numb… <NA>          Additive   
+#>  2 v_CA21_434            v_CA21_434 Total Occup… Numb… <NA>          Additive   
+#>  3 v_CA21_434            v_CA21_434 Total Occup… Numb… <NA>          Additive   
+#>  4 v_CA21_434            v_CA21_435 Total Singl… Numb… v_CA21_434    Additive   
+#>  5 v_CA21_434            v_CA21_435 Total Singl… Numb… v_CA21_434    Additive   
+#>  6 v_CA21_434            v_CA21_435 Total Singl… Numb… v_CA21_434    Additive   
+#>  7 v_CA21_434            v_CA21_436 Total Semi-… Numb… v_CA21_434    Additive   
+#>  8 v_CA21_434            v_CA21_436 Total Semi-… Numb… v_CA21_434    Additive   
+#>  9 v_CA21_434            v_CA21_436 Total Semi-… Numb… v_CA21_434    Additive   
+#> 10 v_CA21_434            v_CA21_437 Total Row h… Numb… v_CA21_434    Additive   
+#> # … with 17 more rows, and 6 more variables: aggregation_type <chr>,
 #> #   details <chr>, geo_uid <chr>, population <dbl>, households <dbl>,
 #> #   value <dbl>
 ```
 
 We can see that there are 10 vectors returned - 9 breakdowns and the
-original parent vector - each of which with 3 records, one for each of
+original parent vector - each of which has 3 records, one for each of
 the CSDs we requested data for.
 
 ``` r
 vector_with_breakdowns %>%
   count(vector, parent_vector, label)
-#> # A tibble: 10 × 4
-#>    vector     parent_vector label                                              n
-#>    <chr>      <chr>         <chr>                                          <int>
-#>  1 v_CA16_408 <NA>          Occupied private dwellings by structural type…     3
-#>  2 v_CA16_409 v_CA16_408    Single-detached house                              3
-#>  3 v_CA16_410 v_CA16_408    Apartment in a building that has five or more…     3
-#>  4 v_CA16_411 v_CA16_408    Other attached dwelling                            3
-#>  5 v_CA16_412 v_CA16_411    Semi-detached house                                3
-#>  6 v_CA16_413 v_CA16_411    Row house                                          3
-#>  7 v_CA16_414 v_CA16_411    Apartment or flat in a duplex                      3
-#>  8 v_CA16_415 v_CA16_411    Apartment in a building that has fewer than f…     3
-#>  9 v_CA16_416 v_CA16_411    Other single-attached house                        3
-#> 10 v_CA16_417 v_CA16_408    Movable dwelling                                   3
+#> # A tibble: 9 × 4
+#>   vector     parent_vector label                                               n
+#>   <chr>      <chr>         <chr>                                           <int>
+#> 1 v_CA21_434 <NA>          Occupied private dwellings by structural type …     3
+#> 2 v_CA21_435 v_CA21_434    Single-detached house                               3
+#> 3 v_CA21_436 v_CA21_434    Semi-detached house                                 3
+#> 4 v_CA21_437 v_CA21_434    Row house                                           3
+#> 5 v_CA21_438 v_CA21_434    Apartment or flat in a duplex                       3
+#> 6 v_CA21_439 v_CA21_434    Apartment in a building that has fewer than fi…     3
+#> 7 v_CA21_440 v_CA21_434    Apartment in a building that has five or more …     3
+#> 8 v_CA21_441 v_CA21_434    Other single-attached house                         3
+#> 9 v_CA21_442 v_CA21_434    Movable dwelling                                    3
 ```
 
 And we can quickly look at the values themselves:
@@ -158,20 +149,20 @@ And we can quickly look at the values themselves:
 ``` r
 vector_with_breakdowns %>%
   select(vector, label, geo_uid, value)
-#> # A tibble: 30 × 4
+#> # A tibble: 27 × 4
 #>    vector     label                                               geo_uid  value
 #>    <chr>      <chr>                                               <chr>    <dbl>
-#>  1 v_CA16_408 Occupied private dwellings by structural type of d… 3520005 1.11e6
-#>  2 v_CA16_408 Occupied private dwellings by structural type of d… 3521005 2.41e5
-#>  3 v_CA16_408 Occupied private dwellings by structural type of d… 3521010 1.68e5
-#>  4 v_CA16_409 Single-detached house                               3520005 2.70e5
-#>  5 v_CA16_409 Single-detached house                               3521005 9.08e4
-#>  6 v_CA16_409 Single-detached house                               3521010 8.76e4
-#>  7 v_CA16_410 Apartment in a building that has five or more stor… 3520005 4.93e5
-#>  8 v_CA16_410 Apartment in a building that has five or more stor… 3521005 6.31e4
-#>  9 v_CA16_410 Apartment in a building that has five or more stor… 3521010 1.75e4
-#> 10 v_CA16_411 Other attached dwelling                             3520005 3.50e5
-#> # … with 20 more rows
+#>  1 v_CA21_434 Occupied private dwellings by structural type of d… 3520005 1.16e6
+#>  2 v_CA21_434 Occupied private dwellings by structural type of d… 3521005 2.45e5
+#>  3 v_CA21_434 Occupied private dwellings by structural type of d… 3521010 1.82e5
+#>  4 v_CA21_435 Single-detached house                               3520005 2.70e5
+#>  5 v_CA21_435 Single-detached house                               3521005 9.07e4
+#>  6 v_CA21_435 Single-detached house                               3521010 9.60e4
+#>  7 v_CA21_436 Semi-detached house                                 3520005 7.20e4
+#>  8 v_CA21_436 Semi-detached house                                 3521005 2.69e4
+#>  9 v_CA21_436 Semi-detached house                                 3521010 2.48e4
+#> 10 v_CA21_437 Row house                                           3520005 6.29e4
+#> # … with 17 more rows
 ```
 
 The second function of censusaggregate is to aggregate the census
@@ -184,24 +175,23 @@ values across the three CSDs. To do this, we use
 vector_with_breakdowns %>%
   aggregate_census_vectors() %>%
   select(vector, label, value, value_proportion)
-#> # A tibble: 10 × 4
-#>    vector     label                                       value value_proportion
-#>    <chr>      <chr>                                       <dbl>            <dbl>
-#>  1 v_CA16_408 Occupied private dwellings by structural … 1.52e6         1       
-#>  2 v_CA16_409 Single-detached house                      4.48e5         0.294   
-#>  3 v_CA16_410 Apartment in a building that has five or … 5.74e5         0.377   
-#>  4 v_CA16_411 Other attached dwelling                    4.99e5         0.328   
-#>  5 v_CA16_412 Semi-detached house                        1.21e5         0.0795  
-#>  6 v_CA16_413 Row house                                  1.16e5         0.0765  
-#>  7 v_CA16_414 Apartment or flat in a duplex              6.79e4         0.0446  
-#>  8 v_CA16_415 Apartment in a building that has fewer th… 1.91e5         0.126   
-#>  9 v_CA16_416 Other single-attached house                2.96e3         0.00195 
-#> 10 v_CA16_417 Movable dwelling                           4.55e2         0.000299
+#> # A tibble: 9 × 4
+#>   vector     label                                        value value_proportion
+#>   <chr>      <chr>                                        <dbl>            <dbl>
+#> 1 v_CA21_434 Occupied private dwellings by structural t… 1.59e6         1       
+#> 2 v_CA21_435 Single-detached house                       4.57e5         0.288   
+#> 3 v_CA21_436 Semi-detached house                         1.24e5         0.0778  
+#> 4 v_CA21_437 Row house                                   1.20e5         0.0758  
+#> 5 v_CA21_438 Apartment or flat in a duplex               6.77e4         0.0426  
+#> 6 v_CA21_439 Apartment in a building that has fewer tha… 1.88e5         0.118   
+#> 7 v_CA21_440 Apartment in a building that has five or m… 6.28e5         0.396   
+#> 8 v_CA21_441 Other single-attached house                 2.88e3         0.00182 
+#> 9 v_CA21_442 Movable dwelling                            3.6 e2         0.000227
 ```
 
 In this case, it returns a field `value` which is the sum of the values
 within the three CSDs, and `value_proportion`, which breaks down the
-value of the highest parent vector (v\_CA16\_408). For example, there
+value of the highest parent vector (v\_CA21\_434). For example, there
 are 448,000 households in total a Single-detached house in the queried
 CSDs, which represents 29.4% of all households in those CSDs.
 
@@ -211,20 +201,23 @@ The vector aggregation happens automatically, based on the vectors’
 units and aggregation type:
 
 ``` r
-vectors <- list_census_vectors("CA16") %>%
+vectors <- list_census_vectors(dataset) %>%
   derive_aggregation_type()
 
 vectors  %>%
   count(units, aggregation_type)
-#> # A tibble: 6 × 3
+#> # A tibble: 9 × 3
 #>   units              aggregation_type     n
 #>   <fct>              <chr>            <int>
-#> 1 Number             Additive          6448
-#> 2 Number             Average              1
-#> 3 Currency           Average             41
-#> 4 Currency           Median              41
-#> 5 Ratio              Average             13
-#> 6 Percentage (0-100) Average             79
+#> 1 Number             Additive          4079
+#> 2 Number             Average              4
+#> 3 Number             Median               3
+#> 4 Currency           Average             59
+#> 5 Currency           Median              59
+#> 6 Ratio              Average              9
+#> 7 Ratio              <NA>                 4
+#> 8 Percentage (0-100) Average             60
+#> 9 Percentage (0-100) Median               3
 ```
 
 In the previous example, we worked with vectors with `units = "Number"`
@@ -261,7 +254,7 @@ population vectors:
 
 ``` r
 population_vectors <- vectors %>% 
-  filter(label %in% c("Population, 2016", "Population, 2011")) %>%
+  filter(label %in% c("Population, 2021", "Population, 2016")) %>%
   pull(vector)
 
 population_change_data <- get_census_vectors_and_children(
@@ -274,21 +267,21 @@ population_change_data <- get_census_vectors_and_children(
 population_change_data %>%
   select(vector, label, geo_uid, value)
 #> # A tibble: 6 × 4
-#>   vector     label            geo_uid   value
-#>   <chr>      <chr>            <chr>     <dbl>
-#> 1 v_CA16_401 Population, 2016 3520005 2731571
-#> 2 v_CA16_401 Population, 2016 3521005  721599
-#> 3 v_CA16_401 Population, 2016 3521010  593638
-#> 4 v_CA16_402 Population, 2011 3520005 2615060
-#> 5 v_CA16_402 Population, 2011 3521005  713443
-#> 6 v_CA16_402 Population, 2011 3521010  523906
+#>   vector   label            geo_uid   value
+#>   <chr>    <chr>            <chr>     <dbl>
+#> 1 v_CA21_1 Population, 2021 3520005 2794356
+#> 2 v_CA21_1 Population, 2021 3521005  717961
+#> 3 v_CA21_1 Population, 2021 3521010  656480
+#> 4 v_CA21_2 Population, 2016 3520005 2731571
+#> 5 v_CA21_2 Population, 2016 3521005  721599
+#> 6 v_CA21_2 Population, 2016 3521010  593638
 
 population_change_data %>%
   aggregate_population_change()
 #> # A tibble: 1 × 7
 #>   type  label       units aggregation aggregation_type details             value
 #>   <fct> <chr>       <fct> <chr>       <chr>            <chr>               <dbl>
-#> 1 Total Population… Numb… Additive    Additive         CA 2016 Census; P… 0.0505
+#> 1 Total Population… Numb… Additive    Additive         CA 2021 Census; P… 0.0301
 ```
 
 #### aggregate\_population\_density()
@@ -299,7 +292,7 @@ population vector and the Land area in square kilometres vector:
 
 ``` r
 population_density_vectors <- vectors %>%
-  filter(label %in% c("Population, 2016", "Land area in square kilometres")) %>%
+  filter(label %in% c("Population, 2021", "Land area in square kilometres")) %>%
   pull(vector)
 
 population_density_data <- get_census_vectors_and_children(
@@ -312,22 +305,24 @@ population_density_data <- get_census_vectors_and_children(
 population_density_data %>%
   select(vector, label, geo_uid, value)
 #> # A tibble: 6 × 4
-#>   vector     label                          geo_uid    value
-#>   <chr>      <chr>                          <chr>      <dbl>
-#> 1 v_CA16_401 Population, 2016               3520005 2731571 
-#> 2 v_CA16_401 Population, 2016               3521005  721599 
-#> 3 v_CA16_401 Population, 2016               3521010  593638 
-#> 4 v_CA16_407 Land area in square kilometres 3520005     630.
-#> 5 v_CA16_407 Land area in square kilometres 3521005     292.
-#> 6 v_CA16_407 Land area in square kilometres 3521010     266.
+#>   vector   label                          geo_uid    value
+#>   <chr>    <chr>                          <chr>      <dbl>
+#> 1 v_CA21_1 Population, 2021               3520005 2794356 
+#> 2 v_CA21_1 Population, 2021               3521005  717961 
+#> 3 v_CA21_1 Population, 2021               3521010  656480 
+#> 4 v_CA21_7 Land area in square kilometres 3520005     631.
+#> 5 v_CA21_7 Land area in square kilometres 3521005     293.
+#> 6 v_CA21_7 Land area in square kilometres 3521010     266.
 
 population_density_data %>%
   aggregate_population_density()
 #> # A tibble: 1 × 7
 #>   type  label       units aggregation aggregation_type details             value
 #>   <fct> <chr>       <fct> <chr>       <chr>            <chr>               <dbl>
-#> 1 Total Population… Numb… Additive    Additive         CA 2016 Census; Po… 3404.
+#> 1 Total Population… Numb… Additive    Additive         CA 2016 Census; Po… 3504.
 ```
+
+#### aggregate\_estimated\_median\_income()
 
 ### Unsupported aggregations
 
@@ -353,11 +348,24 @@ get_census_vectors_and_children(
   vectors = median_vector
 ) %>%
   aggregate_census_vectors()
-#> Warning: Aggregation for vectors with `units: Currency` and `aggregation_type:
-#> Median` is not available. Vectors with this combination have been dropped:
-#> v_CA16_2207.
 #> # A tibble: 0 × 0
 ```
+
+## Utility functions
+
+### collapse\_census\_vectors()
+
+### derive\_aggregation\_type()
+
+### derive\_census\_vector\_order()
+
+### reassign\_parent\_vector()
+
+## Visualizing census data
+
+## plot\_census\_vector()
+
+## inline\_barchart
 
 ## Related work
 

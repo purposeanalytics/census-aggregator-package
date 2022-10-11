@@ -41,9 +41,9 @@ aggregate_estimated_median_income <- function(data) {
       before_median_index = .data$value_cumulative < median_index
     )
 
-    # Get the bucket that includes the median index (the first bucket that is not less than it)
-    # And see how "far" into the bucket the median is, by taking the median index and subtracting the previous bucket count
-    # Then, estimate the median $$ by moving into the bucket proportionally to how far in the median is
+  # Get the bucket that includes the median index (the first bucket that is not less than it)
+  # And see how "far" into the bucket the median is, by taking the median index and subtracting the previous bucket count
+  # Then, estimate the median $$ by moving into the bucket proportionally to how far in the median is
   estimated_median <- buckets_vs_median %>%
     dplyr::filter(!.data$before_median_index) %>%
     dplyr::filter(dplyr::row_number() == 1) %>%
@@ -88,6 +88,9 @@ parse_income_vectors <- function(data) {
 
 # From SO https://stackoverflow.com/a/32508105
 round_to <- function(x, y = 1000) {
-  if((y - x %% y) <= x %% y) { x + (y - x %% y)}
-  else { x - (x %% y)}
+  if ((y - x %% y) <= x %% y) {
+    x + (y - x %% y)
+  } else {
+    x - (x %% y)
+  }
 }

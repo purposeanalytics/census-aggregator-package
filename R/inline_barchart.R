@@ -31,11 +31,11 @@ inline_barchart <- function(data, format = "proportion") {
 
   data %>%
     gt::gt() %>%
-    gtExtras::gt_plt_bar_pct(.data$hist, scaled = scale_bars, fill = "grey", background = "transparent") %>%
+    gtExtras::gt_plt_bar_pct(hist, scaled = scale_bars, fill = "grey", background = "transparent") %>%
     # Coalesce formatted NA to em dash
-    gt::sub_missing(columns = .data$value_fmt) %>%
+    gt::sub_missing(columns = value_fmt) %>%
     gt::cols_width(hist ~ 200) %>%
-    gt::cols_align(align = "left", columns = .data$label) %>%
+    gt::cols_align(align = "left", columns = label) %>%
     gt::tab_options(
       table.width = "100%",
       column_labels.hidden = TRUE,

@@ -26,7 +26,8 @@ inline_barchart <- function(data, format = "proportion") {
 
   # If all values are NA (i.e. all suppressed) need to set scaled = TRUE, to not show bars at all
   # Faking this a bit - scaling them all down to 0 (out of 100)
-  scale_bars <- all(is.na(data[["value_fmt"]]))
+  # Do the same if they are all 0
+  scale_bars <- all(is.na(data[["value_fmt"]]) | data[["hist"]] == 0)
 
   data %>%
     gt::gt() %>%

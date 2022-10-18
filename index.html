@@ -90,7 +90,7 @@
 <span></span>
 <span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="st">"CA21"</span></span>
 <span></span>
-<span><span class="va">vector</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mountainmath.github.io/cancensus/index.html/reference/list_census_vectors.html" class="external-link">list_census_vectors</a></span><span class="op">(</span><span class="va">dataset</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span><span class="va">vector</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mountainmath.github.io/cancensus/reference/list_census_vectors.html" class="external-link">list_census_vectors</a></span><span class="op">(</span><span class="va">dataset</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">label</span> <span class="op">==</span> <span class="st">"Occupied private dwellings by structural type of dwelling data"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">vector</span></span>
@@ -186,7 +186,7 @@
 </h2>
 <p>The vector aggregation happens automatically, based on the vectors’ units and aggregation type:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">vectors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mountainmath.github.io/cancensus/index.html/reference/list_census_vectors.html" class="external-link">list_census_vectors</a></span><span class="op">(</span><span class="va">dataset</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<code class="sourceCode R"><span><span class="va">vectors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mountainmath.github.io/cancensus/reference/list_census_vectors.html" class="external-link">list_census_vectors</a></span><span class="op">(</span><span class="va">dataset</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="reference/derive_aggregation_type.html">derive_aggregation_type</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">vectors</span>  <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>

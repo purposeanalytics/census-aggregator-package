@@ -55,16 +55,12 @@ aggregate_estimated_median_income <- function(data) {
     ) %>%
     dplyr::pull(.data$estimated_median)
 
-
-  # If the estimate is NA because the bucket is 200,000
-  # TODO
-  # Just 200,000 for now
-  if (is.na(estimated_median)) {
-    estimated_median <- 200000
-  }
-
   # Round to the nearest 1000
-  tibble::tibble(value = round_to(estimated_median))
+  if (!is.na(estimated_median)) {
+    tibble::tibble(value = round_to(estimated_median))
+  } else {
+    tibble::tibble(value = estimated_median)
+  }
 }
 
 parse_income_vectors <- function(data) {

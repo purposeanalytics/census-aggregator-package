@@ -255,4 +255,4 @@ get_census_vectors_and_children(
 
 ## Related work
 
-censusaggregate heavily relies on existing work from [`cancensus`]() (and the related [CensusMapper]()) to fetch census data. It has some similar functionality to the [`tongfen`]() package, but is not as feature rich - rather, it focuses on exclusively getting and aggregating Canadian census vectors across multiple (shared) geographies (in contrast to `tongfen`, which ...)
+censusaggregate heavily relies on existing work from [`cancensus`](https://github.com/mountainMath/cancensus) (and the related [CensusMapper](https://censusmapper.ca/)) to fetch census data. It has some similar functionality to the [`tongfen`](https://github.com/mountainMath/tongfen) package, but is not as feature rich - rather, it focuses on exclusively getting and aggregating Canadian census vectors across multiple (shared) geographies (in contrast to `tongfen`, which handles spatial mismatches, generates aggregation metadata, and produces a common geography).

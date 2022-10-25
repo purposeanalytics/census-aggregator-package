@@ -49,6 +49,7 @@
 <span>  regions <span class="op">=</span> <span class="st">"Regions"</span>,</span>
 <span>  <span class="va">level</span>,</span>
 <span>  <span class="va">vectors</span>,</span>
+<span>  terminal_only <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -69,6 +70,10 @@
 
 <dt>vectors</dt>
 <dd><p>An R vector containing the vector short codes for the Census vectors to download. Vector short codes can be found via the <code>vector</code> field of <code><a href="https://mountainmath.github.io/cancensus/reference/census_vectors.html" class="external-link">census_vectors</a></code>.</p></dd>
+
+
+<dt>terminal_only</dt>
+<dd><p>Whether to include only terminal vectors (ones without children). Defaults to FALSE.</p></dd>
 
 
 <dt>quiet</dt>

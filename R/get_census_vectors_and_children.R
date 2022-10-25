@@ -5,6 +5,7 @@
 #' @param dataset The dataset to query vectors from. Defaults to "CA16", the 2016 Canadian Census.
 #' @inheritParams cancensus::get_census
 #' @param vectors An R vector containing the vector short codes for the Census vectors to download. Vector short codes can be found via the \code{vector} field of \code{\link{census_vectors}}.
+#' @param terminal_only Whether to include only terminal vectors (ones without children). Defaults to FALSE.
 #'
 #' @export
 #'
@@ -13,7 +14,7 @@
 #'   regions = list(CSD = c("3520005", "3521005", "3521010")),
 #'   level = "CSD", vectors = c("v_CA16_404", "v_CA16_548")
 #' )
-get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions", level, vectors, quiet = TRUE) {
+get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions", level, vectors, terminal_only = FALSE, quiet = TRUE) {
 
   # Check access to internet
   check_internet()
@@ -23,6 +24,7 @@ get_census_vectors_and_children <- function(dataset = "CA16", regions = "Regions
     purrr::set_names() %>%
     purrr::map_dfr(cancensus::child_census_vectors,
       keep_parent = TRUE,
+      leaves_only = terminal_only,
       .id = "highest_parent_vector"
     )
 

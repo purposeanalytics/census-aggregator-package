@@ -5,7 +5,7 @@ inline_barchart <- function(data, format = "proportion") {
       dplyr::mutate(
         value = .data$value_proportion,
         value_fmt = scales::percent(.data$value_proportion, accuracy = 0.1),
-        value = .data$value*100
+        value = .data$value * 100
       )
   } else if (format == "dollar") {
     data <- data %>%

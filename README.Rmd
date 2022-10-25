@@ -103,7 +103,7 @@ vector_with_breakdowns %>%
   select(vector, label, value, value_proportion)
 ```
 
-In this case, it returns a field `value` which is the sum of the values within the three CSDs, and `value_proportion`, which breaks down the value of the highest parent vector (`r vector`). For example, there are 448,000 households in total a Single-detached house in the queried CSDs, which represents 29.4% of all households in those CSDs.
+In this case, it returns a field `value` which is the sum of the values within the three CSDs, and `value_proportion`, which breaks down the value of the highest parent vector (`r vector`). For example, there are 457,170 households in total a Single-detached house in the queried CSDs, which represents 28.8% of all households in those CSDs.
 
 ## Supported vector aggregation
 
@@ -133,11 +133,11 @@ The `value` is derived by summing all of the `value` for each vector, across geo
 
 ### Special cases
 
-There are two vectors, Population Change and Population Density, that require use of special functions instead of the automatic `aggregate_census_vectors`.
+There are a few vectors that require use of special functions instead of the automatic `aggregate_census_vectors`.
 
 #### aggregate_population_change()
 
-To aggregate population change across geographies, `aggregate_population_change` is used on data that contains two population vectors:
+To aggregate Population Change across geographies, `aggregate_population_change` is used on data that contains two population vectors:
 
 ```{r}
 population_vectors <- vectors %>% 
@@ -160,7 +160,7 @@ population_change_data %>%
 
 #### aggregate_population_density()
 
-Similarly, the aggregate population density across geographies, `aggregate_population_density` is used, passing data that contains a population vector and the Land area in square kilometres vector:
+Similarly, to aggregate Population Density across geographies, `aggregate_population_density` is used, passing data that contains a population vector and the Land area in square kilometres vector:
 
 ```{r}
 population_density_vectors <- vectors %>%
@@ -183,13 +183,42 @@ population_density_data %>%
 
 #### aggregate_estimated_median_income()
 
+We can also aggregate an estimated median income across geographies using `aggregate_estimated_median_income()`. The method used looks at the buckets of income that are available and locates which bucket contains the median value, then assumes a uniform distribution within that bucket to locate the estimated median value. It is then rounded to the nearest $1,000. Note that the median is not calculated if the total count is less than 1,000, nor if the median is in the largest bucket (both cases reutnr NA).
+
+```{r}
+total_household_income_vector <- vectors %>%
+  filter(label == "Household total income groups in 2020 for private households") %>%
+  pull(vector)
+
+total_household_income_data <- get_census_vectors_and_children(
+  dataset = dataset,
+  regions = csd_regions,
+  level = "CSD",
+  vectors = total_household_income_vector,
+  terminal_only = TRUE # Pulling the data with terminal vectors only, e.g. not $100,000 and over, but its children
+)
+
+total_household_income_data %>%
+  select(vector, label, geo_uid, value)
+```
+
+First, use `aggregate_census_vectors()` on the data to get one record per vector (as opposed to one per geography and vector), then use the estimated median function:
+
+```{r}
+total_household_income_data %>%
+  aggregate_census_vectors() %>%
+  aggregate_estimated_median_income()
+```
+
 ### Unsupported aggregations
 
 The following are not supported:
 
 1. Units: Number, Aggregation Type: Average
-2. Units: Currency, Aggregation Type: Median
-3. Units: Ratio, Aggregation Type: Average
+1. Units: Number, Aggregation Type: Median
+1. Units: Currency, Aggregation Type: Median
+1. Units: Ratio, Aggregation Type: Average
+1. Units: Percentage (0-100), Aggregation Type: Median
 
 If you try to aggregate this data, a message and empty tibble will be returned:
 

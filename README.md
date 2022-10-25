@@ -192,8 +192,8 @@ vector_with_breakdowns %>%
 In this case, it returns a field `value` which is the sum of the values
 within the three CSDs, and `value_proportion`, which breaks down the
 value of the highest parent vector (v\_CA21\_434). For example, there
-are 448,000 households in total a Single-detached house in the queried
-CSDs, which represents 29.4% of all households in those CSDs.
+are 457,170 households in total a Single-detached house in the queried
+CSDs, which represents 28.8% of all households in those CSDs.
 
 ## Supported vector aggregation
 
@@ -242,13 +242,12 @@ highest parent vector falls within each child vector.
 
 ### Special cases
 
-There are two vectors, Population Change and Population Density, that
-require use of special functions instead of the automatic
-`aggregate_census_vectors`.
+There are a few vectors that require use of special functions instead of
+the automatic `aggregate_census_vectors`.
 
 #### aggregate\_population\_change()
 
-To aggregate population change across geographies,
+To aggregate Population Change across geographies,
 `aggregate_population_change` is used on data that contains two
 population vectors:
 
@@ -286,7 +285,7 @@ population_change_data %>%
 
 #### aggregate\_population\_density()
 
-Similarly, the aggregate population density across geographies,
+Similarly, to aggregate Population Density across geographies,
 `aggregate_population_density` is used, passing data that contains a
 population vector and the Land area in square kilometres vector:
 
@@ -324,13 +323,69 @@ population_density_data %>%
 
 #### aggregate\_estimated\_median\_income()
 
+We can also aggregate an estimated median income across geographies
+using `aggregate_estimated_median_income()`. The method used looks at
+the buckets of income that are available and locates which bucket
+contains the median value, then assumes a uniform distribution within
+that bucket to locate the estimated median value. It is then rounded to
+the nearest $1,000. Note that the median is not calculated if the total
+count is less than 1,000, nor if the median is in the largest bucket
+(both cases reutnr NA).
+
+``` r
+total_household_income_vector <- vectors %>%
+  filter(label == "Household total income groups in 2020 for private households") %>%
+  pull(vector)
+
+total_household_income_data <- get_census_vectors_and_children(
+  dataset = dataset,
+  regions = csd_regions,
+  level = "CSD",
+  vectors = total_household_income_vector,
+  terminal_only = TRUE # Pulling the data with terminal vectors only, e.g. not $100,000 and over, but its children
+)
+
+total_household_income_data %>%
+  select(vector, label, geo_uid, value)
+#> # A tibble: 60 × 4
+#>    vector     label                                               geo_uid  value
+#>    <chr>      <chr>                                               <chr>    <dbl>
+#>  1 v_CA21_923 Household total income groups in 2020 for private … 3520005 1.16e6
+#>  2 v_CA21_923 Household total income groups in 2020 for private … 3521005 2.45e5
+#>  3 v_CA21_923 Household total income groups in 2020 for private … 3521010 1.82e5
+#>  4 v_CA21_924 Under $5,000                                        3520005 2.20e4
+#>  5 v_CA21_924 Under $5,000                                        3521005 3.10e3
+#>  6 v_CA21_924 Under $5,000                                        3521010 1.06e3
+#>  7 v_CA21_925 $5,000 to $9,999                                    3520005 1.07e4
+#>  8 v_CA21_925 $5,000 to $9,999                                    3521005 1.22e3
+#>  9 v_CA21_925 $5,000 to $9,999                                    3521010 5.15e2
+#> 10 v_CA21_926 $10,000 to $14,999                                  3520005 1.83e4
+#> # … with 50 more rows
+```
+
+First, use `aggregate_census_vectors()` on the data to get one record
+per vector (as opposed to one per geography and vector), then use the
+estimated median function:
+
+``` r
+total_household_income_data %>%
+  aggregate_census_vectors() %>%
+  aggregate_estimated_median_income()
+#> # A tibble: 1 × 1
+#>   value
+#>   <dbl>
+#> 1 90000
+```
+
 ### Unsupported aggregations
 
 The following are not supported:
 
 1.  Units: Number, Aggregation Type: Average
-2.  Units: Currency, Aggregation Type: Median
-3.  Units: Ratio, Aggregation Type: Average
+2.  Units: Number, Aggregation Type: Median
+3.  Units: Currency, Aggregation Type: Median
+4.  Units: Ratio, Aggregation Type: Average
+5.  Units: Percentage (0-100), Aggregation Type: Median
 
 If you try to aggregate this data, a message and empty tibble will be
 returned:

@@ -28,7 +28,7 @@ test_that("aggregate_estimated_median_income returns NA if total count is < 1000
   expect_true(is.na(estimated_median[["value"]]))
 })
 
-test_that("aggregate_estimated_median_income returns 20000 if median is in 200,000+ bucket", {
+test_that("aggregate_estimated_median_income returns NA if median is in 200,000+ bucket", {
   data <- tibble::tribble(
     ~highest_parent_vector, ~vector, ~label, ~value,
     "v_CA21_923", "v_CA21_923", "Household total income groups in 2020 for private households", 1005,
@@ -55,5 +55,5 @@ test_that("aggregate_estimated_median_income returns 20000 if median is in 200,0
 
   estimated_median <- data %>% aggregate_estimated_median_income()
 
-  expect_identical(estimated_median[["value"]], 200000)
+  expect_true(is.na(estimated_median[["value"]]))
 })

@@ -12,3 +12,25 @@ aggregate_estimated_median_income(data)
 \description{
 Estimate median income using income buckets, rounded to the nearest $1,000
 }
+\examples{
+library(dplyr)
+
+total_household_income_vector <- vectors \%>\%
+  filter(label == "Household total income groups in 2020 for private households") \%>\%
+  pull(vector)
+
+total_household_income_data <- get_census_vectors_and_children(
+  dataset = dataset,
+  regions = csd_regions,
+  level = "CSD",
+  vectors = total_household_income_vector,
+  terminal_only = TRUE # Pulling the data with terminal vectors only, e.g. not $100,000 and over, but its children
+)
+
+total_household_income_data \%>\%
+  select(vector, label, geo_uid, value)
+
+total_household_income_data \%>\%
+  aggregate_census_vectors() \%>\%
+  aggregate_estimated_median_income()
+}

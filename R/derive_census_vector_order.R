@@ -18,6 +18,6 @@ derive_census_vector_order <- function(data, by_value = FALSE) {
       dplyr::mutate(
         label = forcats::fct_reorder(.data$label, .data$order)
       ) %>%
-      dplyr::select(-.data$v, -.data$datasetm -.data$order)
+      dplyr::select(-.data$v, -.data$dataset, -.data$order)
   }
 }

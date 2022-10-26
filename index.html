@@ -56,6 +56,7 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
+
 <div class="section level1">
 <div class="page-header"><h1 id="censusaggregate">censusaggregate<a class="anchor" aria-label="anchor" href="#censusaggregate"></a>
 </h1></div>
@@ -194,7 +195,7 @@
 <span><span class="co">#&gt; # A tibble: 9 × 3</span></span>
 <span><span class="co">#&gt;   units              aggregation_type     n</span></span>
 <span><span class="co">#&gt;   &lt;fct&gt;              &lt;chr&gt;            &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1 Number             Additive          4079</span></span>
+<span><span class="co">#&gt; 1 Number             Additive          5555</span></span>
 <span><span class="co">#&gt; 2 Number             Average              4</span></span>
 <span><span class="co">#&gt; 3 Number             Median               3</span></span>
 <span><span class="co">#&gt; 4 Currency           Average             59</span></span>
@@ -356,7 +357,7 @@
 <span></span>
 <span><span class="fu"><a href="reference/get_census_vectors_and_children.html">get_census_vectors_and_children</a></span><span class="op">(</span></span>
 <span>  <span class="va">dataset</span>,</span>
-<span>  regions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>CSD <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"3520005"</span>, <span class="st">"3521005"</span>, <span class="st">"3521010"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  regions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>CSD <span class="op">=</span> <span class="va">csd_regions</span><span class="op">)</span>,</span>
 <span>  level <span class="op">=</span> <span class="st">"CSD"</span>,</span>
 <span>  vectors <span class="op">=</span> <span class="va">median_vector</span></span>
 <span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
@@ -367,20 +368,59 @@
 <div class="section level2">
 <h2 id="utility-functions">Utility functions<a class="anchor" aria-label="anchor" href="#utility-functions"></a>
 </h2>
-<div class="section level3"><h3 id="collapse_census_vectors">collapse_census_vectors()<a class="anchor" aria-label="anchor" href="#collapse_census_vectors"></a>
-</h3></div>
-<div class="section level3"><h3 id="derive_aggregation_type">derive_aggregation_type()<a class="anchor" aria-label="anchor" href="#derive_aggregation_type"></a>
-</h3></div>
-<div class="section level3"><h3 id="derive_census_vector_order">derive_census_vector_order()<a class="anchor" aria-label="anchor" href="#derive_census_vector_order"></a>
-</h3></div>
+<div class="section level3">
+<h3 id="collapse_census_vectors">collapse_census_vectors()<a class="anchor" aria-label="anchor" href="#collapse_census_vectors"></a>
+</h3>
+<p>Used for collapsing multiple census vectors into one. For example, if we want to combine both married and common-law couples with children into a single vector, “With children”. The function works by passing the <code>vector</code> field of existing vectors, and a new vector.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">couples_with_children</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"v_CA21_502"</span>, <span class="st">"v_CA21_505"</span><span class="op">)</span>, new_vector <span class="op">=</span> <span class="st">"Couples with children"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">vectors</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="reference/collapse_census_vectors.html">collapse_census_vectors</a></span><span class="op">(</span><span class="va">couples_with_children</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">vector</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">couples_with_children</span><span class="op">[[</span><span class="st">"new_vector"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">label</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 2 × 1</span></span>
+<span><span class="co">#&gt;   label                </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;                </span></span>
+<span><span class="co">#&gt; 1 Couples with children</span></span>
+<span><span class="co">#&gt; 2 Couples with children</span></span></code></pre></div>
+</div>
 <div class="section level3"><h3 id="reassign_parent_vector">reassign_parent_vector()<a class="anchor" aria-label="anchor" href="#reassign_parent_vector"></a>
 </h3></div>
+<div class="section level3">
+<h3 id="derive_aggregation_type">derive_aggregation_type()<a class="anchor" aria-label="anchor" href="#derive_aggregation_type"></a>
+</h3>
+<p>Derive <code>aggregation_type</code> field from data containing an <code>aggregation</code> field. This is a simplified version of the field, e.g. converting <code>aggregation = "Average of v_CA21_402"</code> to <code>aggregation_type = "Average"</code></p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">vectors</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">aggregation</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="reference/derive_aggregation_type.html">derive_aggregation_type</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 2</span></span>
+<span><span class="co">#&gt;   aggregation           aggregation_type</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;                 &lt;chr&gt;           </span></span>
+<span><span class="co">#&gt; 1 Additive              Additive        </span></span>
+<span><span class="co">#&gt; 2 Additive              Additive        </span></span>
+<span><span class="co">#&gt; 3 Average of v_CA21_402 Average         </span></span>
+<span><span class="co">#&gt; 4 Additive              Additive        </span></span>
+<span><span class="co">#&gt; 5 Additive              Additive        </span></span>
+<span><span class="co">#&gt; 6 Average of v_CA21_7   Average</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="derive_census_vector_order">derive_census_vector_order()<a class="anchor" aria-label="anchor" href="#derive_census_vector_order"></a>
+</h3>
+<p>This function derives the order census vectors should go in, either by using their vector numbering (semantic ordering) or by their values. It returns <code>label</code> as an ordered factor - this is useful for visualization.</p>
+</div>
+</div>
+</div>
+<div class="section level1">
+<h1 id="todo">TODO<a class="anchor" aria-label="anchor" href="#todo"></a>
+</h1>
 <div class="section level2"><h2 id="visualizing-census-data">Visualizing census data<a class="anchor" aria-label="anchor" href="#visualizing-census-data"></a>
 </h2></div>
 <div class="section level2"><h2 id="plot_census_vector">plot_census_vector()<a class="anchor" aria-label="anchor" href="#plot_census_vector"></a>
 </h2></div>
-<div class="section level2"><h2 id="inline_barchart">inline_barchart<a class="anchor" aria-label="anchor" href="#inline_barchart"></a>
+<div class="section level2"><h2 id="inline_barchart">inline_barchart()<a class="anchor" aria-label="anchor" href="#inline_barchart"></a>
 </h2></div>
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
@@ -388,6 +428,7 @@
 <p>censusaggregate heavily relies on existing work from <a href="https://github.com/mountainMath/cancensus" class="external-link"><code>cancensus</code></a> (and the related <a href="https://censusmapper.ca/" class="external-link">CensusMapper</a>) to fetch census data. It has some similar functionality to the <a href="https://github.com/mountainMath/tongfen" class="external-link"><code>tongfen</code></a> package, but is not as feature rich - rather, it focuses on exclusively getting and aggregating Canadian census vectors across multiple (shared) geographies (in contrast to <code>tongfen</code>, which handles spatial mismatches, generates aggregation metadata, and produces a common geography).</p>
 </div>
 </div>
+
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

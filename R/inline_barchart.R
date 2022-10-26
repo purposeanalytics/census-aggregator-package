@@ -28,7 +28,23 @@ inline_barchart <- function(data, format = "proportion") {
   # Scale bars if data is a proportion
   scale_bars <- format == "proportion"
 
-  data %>%
+  # Add footnote if relevant
+  footnote <- NULL
+
+  if (any(stringr::str_detect(data[["label"]], "n.i.e."))) {
+    footnote <- c(footnote, '"n.i.e." = not included elsewhere')
+  }
+
+  if (any(stringr::str_detect(data[["label"]], "n.o.s."))) {
+    footnote <- c(footnote, '"n.o.s." = not otherwise specified"')
+  }
+
+  if (!is.null(footnote)) {
+    footnote <- paste(footnote, collapse = "; ")
+    footnote <- paste0("Note: ", footnote, ".")
+  }
+
+  table <- data %>%
     gt::gt() %>%
     gtExtras::gt_plt_bar_pct(hist, scaled = scale_bars, fill = "grey", background = "transparent") %>%
     # Coalesce formatted NA to em dash
@@ -42,4 +58,15 @@ inline_barchart <- function(data, format = "proportion") {
       table_body.border.bottom.color = "transparent",
       table.font.names = "Lato"
     )
+
+  if (!is.null(footnote)) {
+    table <- table %>%
+      gt::tab_footnote(footnote, placement = "left") %>%
+      gt::tab_style(
+        style = list(gt::cell_text(style = "italic")),
+        locations = gt::cells_footnotes()
+      )
+  }
+
+  table
 }

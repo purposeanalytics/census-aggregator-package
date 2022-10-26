@@ -36,12 +36,12 @@ inline_barchart <- function(data, format = "proportion") {
   }
 
   if (any(stringr::str_detect(data[["label"]], "n.o.s."))) {
-    footnote <- c(footnote, '"n.o.s." = not otherwise specified"')
+    footnote <- c(footnote, '"n.o.s." = not otherwise specified')
   }
 
   if (!is.null(footnote)) {
     footnote <- paste(footnote, collapse = "; ")
-    footnote <- paste0("Note: ", footnote, ".")
+    footnote <- paste("Note:", footnote)
   }
 
   table <- data %>%
@@ -55,9 +55,11 @@ inline_barchart <- function(data, format = "proportion") {
       table.width = "100%",
       column_labels.hidden = TRUE,
       table_body.border.top.color = "transparent",
-      table_body.border.bottom.color = "transparent",
       table.font.names = "Lato"
     )
+
+  # If there is a footnote, keep the table_body bottom border and remove the overall table one
+  # If there is NO footnote, remove the table_body one
 
   if (!is.null(footnote)) {
     table <- table %>%
@@ -65,6 +67,14 @@ inline_barchart <- function(data, format = "proportion") {
       gt::tab_style(
         style = list(gt::cell_text(style = "italic")),
         locations = gt::cells_footnotes()
+      ) %>%
+      gt::tab_options(
+        table.border.bottom.color = "transparent",
+      )
+  } else {
+    table <- table %>%
+      gt::tab_options(
+        table_body.border.bottom.color = "transparent",
       )
   }
 

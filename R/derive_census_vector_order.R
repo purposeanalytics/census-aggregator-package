@@ -17,6 +17,7 @@ derive_census_vector_order <- function(data, by_value = FALSE) {
       tidyr::separate(.data$vector, into = c("v", "dataset", "order"), sep = "_", remove = FALSE) %>%
       dplyr::mutate(
         label = forcats::fct_reorder(.data$label, .data$order)
-      )
+      ) %>%
+      dplyr::select(-.data$v, -.data$datasetm -.data$order)
   }
 }

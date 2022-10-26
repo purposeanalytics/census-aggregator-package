@@ -209,7 +209,7 @@ vectors  %>%
 #> # A tibble: 9 × 3
 #>   units              aggregation_type     n
 #>   <fct>              <chr>            <int>
-#> 1 Number             Additive          4079
+#> 1 Number             Additive          5555
 #> 2 Number             Average              4
 #> 3 Number             Median               3
 #> 4 Currency           Average             59
@@ -398,7 +398,7 @@ median_vector <- vectors %>%
 
 get_census_vectors_and_children(
   dataset,
-  regions = list(CSD = c("3520005", "3521005", "3521010")),
+  regions = list(CSD = csd_regions),
   level = "CSD",
   vectors = median_vector
 ) %>%
@@ -410,17 +410,63 @@ get_census_vectors_and_children(
 
 ### collapse\_census\_vectors()
 
+Used for collapsing multiple census vectors into one. For example, if we
+want to combine both married and common-law couples with children into a
+single vector, “With children”. The function works by passing the
+`vector` field of existing vectors, and a new vector.
+
+``` r
+couples_with_children <- tibble(vector = c("v_CA21_502", "v_CA21_505"), new_vector = "Couples with children")
+
+vectors %>%
+  collapse_census_vectors(couples_with_children) %>%
+  filter(vector %in% couples_with_children[["new_vector"]]) %>%
+  select(label)
+#> # A tibble: 2 × 1
+#>   label                
+#>   <chr>                
+#> 1 Couples with children
+#> 2 Couples with children
+```
+
+### reassign\_parent\_vector()
+
 ### derive\_aggregation\_type()
+
+Derive `aggregation_type` field from data containing an `aggregation`
+field. This is a simplified version of the field, e.g. converting
+`aggregation = "Average of v_CA21_402"` to
+`aggregation_type = "Average"`
+
+``` r
+vectors %>%
+  head() %>%
+  select(aggregation) %>%
+  derive_aggregation_type()
+#> # A tibble: 6 × 2
+#>   aggregation           aggregation_type
+#>   <chr>                 <chr>           
+#> 1 Additive              Additive        
+#> 2 Additive              Additive        
+#> 3 Average of v_CA21_402 Average         
+#> 4 Additive              Additive        
+#> 5 Additive              Additive        
+#> 6 Average of v_CA21_7   Average
+```
 
 ### derive\_census\_vector\_order()
 
-### reassign\_parent\_vector()
+This function derives the order census vectors should go in, either by
+using their vector numbering (semantic ordering) or by their values. It
+returns `label` as an ordered factor - this is useful for visualization.
+
+# TODO
 
 ## Visualizing census data
 
 ## plot\_census\_vector()
 
-## inline\_barchart
+## inline\_barchart()
 
 ## Related work
 

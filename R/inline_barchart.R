@@ -51,6 +51,7 @@ inline_barchart <- function(data, format = "proportion") {
     gt::sub_missing(columns = value_fmt) %>%
     gt::cols_width(hist ~ 200) %>%
     gt::cols_align(align = "left", columns = label) %>%
+    gt::cols_align(align = "right", columns = value_fmt) %>%
     gt::tab_options(
       table.width = "100%",
       column_labels.hidden = TRUE,

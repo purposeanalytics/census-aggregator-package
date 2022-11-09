@@ -3,6 +3,7 @@ inline_barchart <- function(data, format = "proportion") {
   if (format == "proportion") {
     data <- data %>%
       dplyr::mutate(
+        count = scales::comma(.data$value),
         value = .data$value_proportion,
         value_fmt = scales::percent(.data$value_proportion, accuracy = 0.1),
         value = .data$value * 100
@@ -22,7 +23,7 @@ inline_barchart <- function(data, format = "proportion") {
 
   data <- data %>%
     dplyr::mutate(hist = .data$value) %>%
-    dplyr::select(.data$label, .data$hist, .data$value_fmt) %>%
+    dplyr::select(.data$label, tidyselect::any_of("count"), .data$value_fmt, .data$hist) %>%
     dplyr::arrange(.data$label)
 
   # Scale bars if data is a proportion
@@ -49,7 +50,6 @@ inline_barchart <- function(data, format = "proportion") {
     gtExtras::gt_plt_bar_pct(hist, scaled = scale_bars, fill = "grey", background = "transparent") %>%
     # Coalesce formatted NA to em dash
     gt::sub_missing(columns = value_fmt) %>%
-    gt::cols_width(hist ~ 200) %>%
     gt::cols_align(align = "left", columns = label) %>%
     gt::cols_align(align = "right", columns = value_fmt) %>%
     gt::tab_options(
@@ -58,6 +58,14 @@ inline_barchart <- function(data, format = "proportion") {
       table_body.border.top.color = "transparent",
       table.font.names = "Lato"
     )
+
+  if (format == "proportion") {
+    table <- table %>%
+      gt::cols_width(label ~ 175, count ~ 75, value_fmt ~ 75, hist ~ 100)
+  } else {
+    table <- table %>%
+      gt::cols_width(label ~ 250, value_fmt ~ 75, hist ~ 100)
+  }
 
   # If there is a footnote, keep the table_body bottom border and remove the overall table one
   # If there is NO footnote, remove the table_body one

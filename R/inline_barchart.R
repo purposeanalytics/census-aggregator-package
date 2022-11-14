@@ -40,6 +40,11 @@ inline_barchart <- function(data, format = "proportion") {
     footnote <- c(footnote, '"n.o.s." = not otherwise specified')
   }
 
+  # Add note about --- if suppressed
+  if (any(is.na(data[["value_fmt"]]))) {
+    footnote <- c(footnote, "&#8212; indicates data for one or more of the selected areas is not available or is suppressed due to confidentiality.")
+  }
+
   if (!is.null(footnote)) {
     footnote <- paste(footnote, collapse = "; ")
     footnote <- paste("Note:", footnote)
@@ -72,7 +77,7 @@ inline_barchart <- function(data, format = "proportion") {
 
   if (!is.null(footnote)) {
     table <- table %>%
-      gt::tab_footnote(footnote, placement = "left") %>%
+      gt::tab_footnote(gt::html(footnote), placement = "left") %>%
       gt::tab_style(
         style = list(gt::cell_text(style = "italic")),
         locations = gt::cells_footnotes()

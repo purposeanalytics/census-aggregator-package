@@ -42,7 +42,7 @@ inline_barchart <- function(data, format = "proportion") {
 
   # Add note about --- if suppressed
   if (any(is.na(data[["value_fmt"]]))) {
-    footnote <- c(footnote, "&#8212; indicates data for one or more of the selected areas is not available or is suppressed due to confidentiality.")
+    footnote <- c(footnote, "&#8212; indicates data for one or more of the selected areas is not available or is suppressed due to confidentiality")
   }
 
   if (!is.null(footnote)) {
@@ -66,10 +66,10 @@ inline_barchart <- function(data, format = "proportion") {
 
   if (format == "proportion") {
     table <- table %>%
-      gt::cols_width(label ~ 175, count ~ 75, value_fmt ~ 75, hist ~ 100)
+      gt::cols_width(label ~ "43%", count ~ "16%", value_fmt ~ "16%", hist ~ "25%")
   } else {
     table <- table %>%
-      gt::cols_width(label ~ 250, value_fmt ~ 75, hist ~ 100)
+      gt::cols_width(label ~ "43%", value_fmt ~ "32%", hist ~ "25%")
   }
 
   # If there is a footnote, keep the table_body bottom border and remove the overall table one

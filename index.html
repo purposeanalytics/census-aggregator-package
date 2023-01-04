@@ -34,7 +34,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">censusaggregate</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1</span>
       </span>
     </div>
 
@@ -42,6 +42,9 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="reference/index.html">Reference</a>
+</li>
+<li>
+  <a href="news/index.html">Changelog</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right"></ul>
@@ -78,7 +81,9 @@
 <p>CensusMapper API keys are free and public API quotas are generous; however, due to incremental costs of serving large quantities of data, there are some limits to API usage in place. For most use cases, these API limits should not be an issue. Production uses with large extracts of detailed geographies may run into API quota limits.</p>
 </blockquote>
 <p>In addition, censusaggregate uses <code>cancensus</code>’ caching infrastructure to avoid repeat calls to the API:</p>
-<blockquote><p>By default, cancensus caches in R’s temporary directory, but this cache is not persistent across sessions. In order to speed up performance, reduce quota usage, and reduce the need for unnecessary network calls, we recommend assigning a persistent local cache using cancensus::set_cache_path(<local cache path>, install = TRUE), this enables more efficient loading and reuse of downloaded data. Users will be prompted with a suggestion to change their default cache location when making API calls if one has not been set yet.</local></p></blockquote>
+<blockquote>
+<p>By default, cancensus caches in R’s temporary directory, but this cache is not persistent across sessions. In order to speed up performance, reduce quota usage, and reduce the need for unnecessary network calls, we recommend assigning a persistent local cache using cancensus::set_cache_path(<local cache path>, install = TRUE), this enables more efficient loading and reuse of downloaded data. Users will be prompted with a suggestion to change their default cache location when making API calls if one has not been set yet.</local></p>
+</blockquote>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
@@ -86,7 +91,7 @@
 <p>censusaggregate has two primary functions, the first of which is to retrieve a census vector and <em>all</em> of its child vectors (children). Child vectors further break down or provide additional detail to a vector. For example, if we want to get the vector that describes the structural type of dwellings, first we list all vectors for the 2021 census, then filter for the one of interest:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mountainMath/cancensus" class="external-link">cancensus</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purposeanalytics.github.io/census-aggregator-package">censusaggregate</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purposeanalytics.github.io/census-aggregator-package" class="external-link">censusaggregate</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="st">"CA21"</span></span>
@@ -215,10 +220,14 @@
 </h3>
 <p>The <code>value</code> is derived by summing all of the <code>value</code> for each vector, across geographies. The result is a count (e.g. population, households). An additional field, <code>value_proportion</code>, is derived, describing what proportion of the total count (e.g. of population, households) from the highest parent vector falls within each child vector.</p>
 </div>
-<div class="section level3"><h3 id="units-percentage-0-100-aggregation-type-average">Units: Percentage (0-100), Aggregation Type: Average<a class="anchor" aria-label="anchor" href="#units-percentage-0-100-aggregation-type-average"></a>
-</h3></div>
-<div class="section level3"><h3 id="units-currency-aggregation-type-average">Units: Currency, Aggregation Type: Average<a class="anchor" aria-label="anchor" href="#units-currency-aggregation-type-average"></a>
-</h3></div>
+<div class="section level3">
+<h3 id="units-percentage-0-100-aggregation-type-average">Units: Percentage (0-100), Aggregation Type: Average<a class="anchor" aria-label="anchor" href="#units-percentage-0-100-aggregation-type-average"></a>
+</h3>
+</div>
+<div class="section level3">
+<h3 id="units-currency-aggregation-type-average">Units: Currency, Aggregation Type: Average<a class="anchor" aria-label="anchor" href="#units-currency-aggregation-type-average"></a>
+</h3>
+</div>
 <div class="section level3">
 <h3 id="special-cases">Special cases<a class="anchor" aria-label="anchor" href="#special-cases"></a>
 </h3>
@@ -385,8 +394,10 @@
 <span><span class="co">#&gt; 1 Couples with children</span></span>
 <span><span class="co">#&gt; 2 Couples with children</span></span></code></pre></div>
 </div>
-<div class="section level3"><h3 id="reassign_parent_vector">reassign_parent_vector()<a class="anchor" aria-label="anchor" href="#reassign_parent_vector"></a>
-</h3></div>
+<div class="section level3">
+<h3 id="reassign_parent_vector">reassign_parent_vector()<a class="anchor" aria-label="anchor" href="#reassign_parent_vector"></a>
+</h3>
+</div>
 <div class="section level3">
 <h3 id="derive_aggregation_type">derive_aggregation_type()<a class="anchor" aria-label="anchor" href="#derive_aggregation_type"></a>
 </h3>
@@ -416,12 +427,18 @@
 <div class="section level1">
 <h1 id="todo">TODO<a class="anchor" aria-label="anchor" href="#todo"></a>
 </h1>
-<div class="section level2"><h2 id="visualizing-census-data">Visualizing census data<a class="anchor" aria-label="anchor" href="#visualizing-census-data"></a>
-</h2></div>
-<div class="section level2"><h2 id="plot_census_vector">plot_census_vector()<a class="anchor" aria-label="anchor" href="#plot_census_vector"></a>
-</h2></div>
-<div class="section level2"><h2 id="inline_barchart">inline_barchart()<a class="anchor" aria-label="anchor" href="#inline_barchart"></a>
-</h2></div>
+<div class="section level2">
+<h2 id="visualizing-census-data">Visualizing census data<a class="anchor" aria-label="anchor" href="#visualizing-census-data"></a>
+</h2>
+</div>
+<div class="section level2">
+<h2 id="plot_census_vector">plot_census_vector()<a class="anchor" aria-label="anchor" href="#plot_census_vector"></a>
+</h2>
+</div>
+<div class="section level2">
+<h2 id="inline_barchart">inline_barchart()<a class="anchor" aria-label="anchor" href="#inline_barchart"></a>
+</h2>
+</div>
 <div class="section level2">
 <h2 id="related-work">Related work<a class="anchor" aria-label="anchor" href="#related-work"></a>
 </h2>
@@ -469,7 +486,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>

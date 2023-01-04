@@ -1,54 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/404.html</loc>
+    <loc>/404.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/LICENSE-text.html</loc>
+    <loc>/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/LICENSE.html</loc>
+    <loc>/LICENSE.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/authors.html</loc>
+    <loc>/authors.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/index.html</loc>
+    <loc>/index.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_census_vectors.html</loc>
+    <loc>/news/index.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_estimated_median_income.html</loc>
+    <loc>/reference/aggregate_census_vectors.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_population_change.html</loc>
+    <loc>/reference/aggregate_estimated_median_income.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/aggregate_population_density.html</loc>
+    <loc>/reference/aggregate_population_change.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/collapse_census_vectors.html</loc>
+    <loc>/reference/aggregate_population_density.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/derive_aggregation_type.html</loc>
+    <loc>/reference/collapse_census_vectors.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/derive_census_vector_order.html</loc>
+    <loc>/reference/derive_aggregation_type.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/get_census_vectors_and_children.html</loc>
+    <loc>/reference/derive_census_vector_order.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/index.html</loc>
+    <loc>/reference/get_census_vectors_and_children.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/pipe.html</loc>
+    <loc>/reference/index.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/plot_census_vector.html</loc>
+    <loc>/reference/pipe.html</loc>
   </url>
   <url>
-    <loc>https://purposeanalytics.github.io/census-aggregator-package/reference/reassign_parent_vector.html</loc>
+    <loc>/reference/plot_census_vector.html</loc>
+  </url>
+  <url>
+    <loc>/reference/reassign_parent_vector.html</loc>
   </url>
 </urlset>

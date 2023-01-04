@@ -32,11 +32,11 @@ inline_barchart <- function(data, format = "proportion") {
   # Add footnote if relevant
   footnote <- NULL
 
-  if (any(stringr::str_detect(data[["label"]], "n.i.e."))) {
+  if (any(stringr::str_detect(data[["label"]], "n\\.i\\.e\\."))) {
     footnote <- c(footnote, '"n.i.e." = not included elsewhere')
   }
 
-  if (any(stringr::str_detect(data[["label"]], "n.o.s."))) {
+  if (any(stringr::str_detect(data[["label"]], "n\\.o\\.s\\."))) {
     footnote <- c(footnote, '"n.o.s." = not otherwise specified')
   }
 

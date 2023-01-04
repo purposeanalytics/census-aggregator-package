@@ -10,7 +10,7 @@ derive_aggregation_type(data)
 \item{data}{Data containing a field \code{aggregation}, e.g. from \code{\link[cancensus]{list_census_vectors}}}
 }
 \description{
-Derive \code{aggregation_type} field from data containing an \code{aggregation} field. This is a simplified version of the field, e.g. converting \code{aggregation = "Average of v_CA16_4890"} to \code{aggregation_type = "Average"}
+Derive \code{aggregation_type} field from data containing an \code{aggregation} field. This is a simplified version of the field, e.g. converting \code{aggregation = "Average of v_CA21_402"} to \code{aggregation_type = "Average"}
 }
 \examples{
 library(cancensus)

@@ -33,6 +33,3 @@ plot_census_vector(
 \description{
 Plot a neighbourhood profile variable, for web
 }
-\examples{
-# TODO
-}
